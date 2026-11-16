@@ -3594,14 +3594,14 @@ public class DatabaseService
         var dt = new DataTable();
         using var connection = CreateOpenConnection();
 
-        var (from, toExclusive) = GetSchoolYearDateRange(currentSchoolYear);
+        var (from, _) = GetSchoolYearDateRange(currentSchoolYear);
         var normalizedClasses = NormalizeClassList(classes);
 
         var conditions = new List<string>
         {
             "(s.stuClassID IS NULL OR CStr(s.stuClassID) <> '9999')",
-            "NOT EXISTS (SELECT 1 FROM [Transaction] t WHERE t.stuID = s.stuID AND t.History = '0')",
-            "NOT EXISTS (SELECT 1 FROM [History] h WHERE h.stuID = s.stuID AND ((h.DateOfTrans >= ? AND h.DateOfTrans < ?) OR (h.DateOfReturn >= ? AND h.DateOfReturn < ?)))"
+            "NOT EXISTS (SELECT 1 FROM [Transaction] t WHERE t.stuID = s.stuID AND t.DateOfTrans >= ?)",
+            "NOT EXISTS (SELECT 1 FROM [History] h WHERE h.stuID = s.stuID AND h.DateOfTrans >= ?)"
         };
 
         if (normalizedClasses.Count > 0)
@@ -3621,8 +3621,7 @@ public class DatabaseService
         using var cmd = new OleDbCommand(sql, connection);
         for (var i = 0; i < 2; i++)
         {
-            cmd.Parameters.Add("@pFrom" + i, OleDbType.Date).Value = from;
-            cmd.Parameters.Add("@pTo" + i, OleDbType.Date).Value = toExclusive;
+            cmd.Parameters.Add("@pStart" + i, OleDbType.Date).Value = from;
         }
 
         for (var i = 0; i < normalizedClasses.Count; i++)
