@@ -44,3 +44,6 @@ tmp_patch.ps1
 SchoolLibraryManager/.github/stepByStepPrompts.txt
 
 **/copilot-instructions.md
+
+build-release.ps1
+Releases/

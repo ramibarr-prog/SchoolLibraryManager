@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 using System.Data.OleDb;
 using System.Globalization;
 using System.IO;
@@ -809,7 +809,7 @@ public class DatabaseService
     public static bool IsBackupOrTempDatabaseFile(string path)
     {
         var name = Path.GetFileNameWithoutExtension(path ?? string.Empty);
-        string[] markers = { "_Auto_", "_Manual_", "_Shutdown_", "_PreCompact_", "_PreSync_", "_PreRollover_", "_compact_", "_precompact_", "_restore_" };
+        string[] markers = { "_Auto_", "_Manual_", "_Shutdown_", "_PreCompact_", "_PreUpdate_", "_PreSync_", "_PreRollover_", "_compact_", "_precompact_", "_restore_" };
         if (markers.Any(m => name.Contains(m, StringComparison.OrdinalIgnoreCase))) return true;
 
         var directory = Path.GetFileName(Path.GetDirectoryName(Path.GetFullPath(path ?? string.Empty)) ?? string.Empty);
@@ -1084,7 +1084,8 @@ public class DatabaseService
         var fileName = Path.GetFileName(file);
         return fileName.Contains("_Auto_", StringComparison.OrdinalIgnoreCase)
             || fileName.Contains("_Shutdown_", StringComparison.OrdinalIgnoreCase)
-            || fileName.Contains("_PreCompact_", StringComparison.OrdinalIgnoreCase);
+            || fileName.Contains("_PreCompact_", StringComparison.OrdinalIgnoreCase)
+            || fileName.Contains("_PreUpdate_", StringComparison.OrdinalIgnoreCase);
     }
 
     private static DateTime GetBackupTimestamp(string file)

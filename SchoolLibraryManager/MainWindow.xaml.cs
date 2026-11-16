@@ -7,6 +7,7 @@ namespace SchoolLibraryManager;
 public partial class MainWindow : Window
 {
     private readonly DatabaseService _databaseService = new();
+    private UpdateService? _updateService;
 
     private readonly DeskView _deskView;
     private readonly BooksView _booksView;
@@ -17,6 +18,9 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+
+        var appVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+        TxtVersion.Text = appVersion is null ? string.Empty : $"גרסה {appVersion.Major}.{appVersion.Minor}.{appVersion.Build}";
 
         _deskView = new DeskView(_databaseService);
         _booksView = new BooksView(_databaseService);
@@ -73,6 +77,18 @@ public partial class MainWindow : Window
                 MessageBoxButton.OK,
                 MessageBoxImage.Warning);
         }
+
+        _updateService = new UpdateService(_databaseService, this);
+        if (!App.IsMaintenance && !App.IsRestoring)
+        {
+            _ = _updateService.CheckAsync(interactive: false);
+        }
+    }
+
+    private async void BtnCheckUpdates_Click(object sender, RoutedEventArgs e)
+    {
+        _updateService ??= new UpdateService(_databaseService, this);
+        await _updateService.CheckAsync(interactive: true);
     }
 
     private void NavButton_OnClick(object sender, RoutedEventArgs e)

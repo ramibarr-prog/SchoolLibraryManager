@@ -1,4 +1,4 @@
-﻿<Window x:Class="SchoolLibraryManager.MainWindow"
+<Window x:Class="SchoolLibraryManager.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -67,6 +67,7 @@
                     <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
                         <TextBlock Text="ספריית תיכון אתגרי העתיד" FontWeight="Bold" FontSize="16" Foreground="#1D4F91" />
                         <TextBlock Text="מקום שטוב לגדול בו" FontSize="11" Foreground="#666666" />
+                        <TextBlock x:Name="TxtVersion" FontSize="10" Foreground="#94A3B8" />
                     </StackPanel>
                 </StackPanel>
 
@@ -79,6 +80,7 @@
                 </WrapPanel>
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="בדוק עדכונים 🔄" Padding="12,6" Margin="0,0,8,0" Click="BtnCheckUpdates_Click" />
                     <Button Content="גיבוי מהיר 💾" Padding="12,6" Click="BtnQuickBackup_Click" />
                 </StackPanel>
             </Grid>
