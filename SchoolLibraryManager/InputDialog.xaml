@@ -1,0 +1,50 @@
+<Window x:Class="SchoolLibraryManager.InputDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Width="380"
+        SizeToContent="Height"
+        ResizeMode="NoResize"
+        WindowStyle="ToolWindow"
+        WindowStartupLocation="CenterOwner"
+        FlowDirection="RightToLeft"
+        FontFamily="Segoe UI"
+        Background="#F8FAFC"
+        ContentRendered="Window_OnContentRendered">
+    <Grid Margin="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0"
+                   x:Name="TxtPrompt"
+                   TextWrapping="Wrap"
+                   Margin="0,0,0,10" />
+
+        <TextBox Grid.Row="1"
+                 x:Name="TxtInput"
+                 Height="28"
+                 VerticalContentAlignment="Center"
+                 KeyDown="TxtInput_OnKeyDown" />
+
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Left"
+                    Margin="0,12,0,0">
+            <Button Content="אישור"
+                    Width="82"
+                    Height="32"
+                    Margin="0,0,8,0"
+                    IsDefault="True"
+                    Click="BtnOk_OnClick" />
+            <Button Content="ביטול"
+                    Width="82"
+                    Height="32"
+                    Background="#6B7280"
+                    BorderBrush="#4B5563"
+                    IsCancel="True"
+                    Click="BtnCancel_OnClick" />
+        </StackPanel>
+    </Grid>
+</Window>

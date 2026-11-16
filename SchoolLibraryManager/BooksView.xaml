@@ -1,0 +1,465 @@
+﻿<UserControl x:Class="SchoolLibraryManager.BooksView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             FlowDirection="RightToLeft"
+             FontFamily="Segoe UI">
+    <Grid Margin="16">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*" />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition Width="1*" />
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0"
+                Background="White"
+                BorderBrush="#D8DEE6"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="12">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="0"
+                        Background="#F5F7FA"
+                        BorderBrush="#D8DEE6"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="10"
+                        Margin="0,0,0,10">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="חיפוש כותר (כותר / מחבר / מספר קטלוגי):"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,8,0"
+                                       FontWeight="SemiBold" />
+                            <TextBox x:Name="txtBookSearch"
+                                      Width="200"
+                                     Height="34"
+                                     VerticalContentAlignment="Center"
+                                     TextAlignment="Right"
+                                     TextChanged="TxtBookSearch_OnTextChanged" />
+                        </StackPanel>
+
+                        <TextBlock Grid.Column="1"
+                                   x:Name="txtResultsCount"
+                                   VerticalAlignment="Center"
+                                    MinWidth="130"
+                                    TextAlignment="Center"
+                                   FontWeight="SemiBold"
+                                   Foreground="#1F2937"
+                                    Margin="12,0,12,0"
+                                   Text="נמצאו 0 כותרים" />
+
+                        <Button Grid.Column="2"
+                                x:Name="btnAddNewBook"
+                                Content="➕ הוספת כותר חדש"
+                                Height="34"
+                                Padding="14,4"
+                                Margin="12,0,0,0"
+                                Background="#1D4ED8"
+                                Foreground="White"
+                                FontWeight="SemiBold"
+                                Click="BtnAddNewBook_OnClick" />
+                    </Grid>
+                </Border>
+
+                <DataGrid Grid.Row="1"
+                          x:Name="gridBooks"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          CanUserAddRows="False"
+                          HeadersVisibility="Column"
+                          GridLinesVisibility="Horizontal"
+                          RowHeaderWidth="0"
+                          SelectionMode="Single"
+                          ScrollViewer.IsDeferredScrollingEnabled="False"
+                          EnableRowVirtualization="True"
+                          EnableColumnVirtualization="True"
+                          SelectionChanged="GridBooks_OnSelectionChanged"
+           VirtualizingPanel.IsVirtualizing="True"
+           VirtualizingPanel.VirtualizationMode="Recycling">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="קוד" Binding="{Binding bkID}" Width="*" />
+                        <DataGridTextColumn Header="כותרת" Binding="{Binding bkName}" Width="2*" />
+                        <DataGridTextColumn Header="מחבר" Binding="{Binding bkAuthor}" Width="2*" />
+                            <DataGridTextColumn Header="מחיר" Binding="{Binding bkPrice}" Width="*" />
+                        <DataGridTextColumn Header="מקצוע" Binding="{Binding SubjectName}" Width="*" />
+                        <DataGridTextColumn Header="סה&quot;כ עותקים" Binding="{Binding TotalCopies}" Width="*" />
+                        <DataGridTextColumn Header="עותקים זמינים" Binding="{Binding AvailableCopies}" Width="*" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </Border>
+
+        <Border Grid.Column="2"
+                Background="White"
+                BorderBrush="#D8DEE6"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="12">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock x:Name="txtSelectedBookHeader"
+                           Text="כותר נבחר: -"
+                           FontSize="18"
+                           FontWeight="Bold"
+                           Margin="0,0,0,10" />
+
+                <TabControl Grid.Row="1">
+                    <TabItem Header="פרטי כותר ועריכה ✏️">
+                        <Grid Margin="8">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <StackPanel Margin="0,0,0,8">
+                                <TextBlock Text="כותר" FontWeight="SemiBold" Margin="0,0,0,4" />
+                                <TextBox x:Name="txtBookTitle" Height="32" IsReadOnly="True" Background="#F3F4F6" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Margin="0,0,0,8">
+                                <TextBlock Text="מחבר" FontWeight="SemiBold" Margin="0,0,0,4" />
+                                <TextBox x:Name="txtBookAuthor" Height="32" IsReadOnly="True" Background="#F3F4F6" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="2" Margin="0,0,0,8">
+                                <TextBlock Text="מקצוע" FontWeight="SemiBold" Margin="0,0,0,4" />
+                                <TextBox x:Name="txtBookSubject" Height="32" IsReadOnly="True" Background="#F3F4F6" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="3" Margin="0,0,0,8">
+                                <TextBlock Text="הוצאה לאור" FontWeight="SemiBold" Margin="0,0,0,4" />
+                                <TextBox x:Name="txtBookPublisher" Height="32" IsReadOnly="True" Background="#F3F4F6" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="4" Margin="0,0,0,10">
+                                <TextBlock Text="שנת הוצאה" FontWeight="SemiBold" Margin="0,0,0,4" />
+                                <TextBox x:Name="txtBookYear"
+                                         Height="32"
+                                         MaxLength="4"
+                                         PreviewTextInput="IntegerOnly_PreviewTextInput"
+                                         PreviewKeyDown="IntegerOnly_PreviewKeyDown"
+                                         IsReadOnly="True"
+                                         Background="#F3F4F6" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="5" Margin="0,0,0,10">
+                                <TextBlock Text="מחיר" FontWeight="SemiBold" Margin="0,0,0,4" />
+                                <TextBox x:Name="txtBookPrice"
+                                         Height="32"
+                                         IsReadOnly="True"
+                                         Background="#F3F4F6"
+                                         PreviewTextInput="Price_PreviewTextInput"
+                                         PreviewKeyDown="Price_PreviewKeyDown"
+                                         DataObject.Pasting="Price_OnPasting" />
+                            </StackPanel>
+
+                            <WrapPanel Grid.Row="6" Margin="0,8,0,0" HorizontalAlignment="Left">
+                                <Button x:Name="btnEditBook"
+                                        Content="עריכת פרטים ✏️"
+                                        Height="34"
+                                        Padding="14,4"
+                                        IsEnabled="False"
+                                        Click="BtnEditBook_OnClick" />
+                                <Button x:Name="btnSaveBook"
+                                        Content="שמור שינויים 💾"
+                                        Height="34"
+                                        Padding="14,4"
+                                        Margin="8,0,0,0"
+                                        Background="#16A34A"
+                                        Foreground="White"
+                                        FontWeight="SemiBold"
+                                        Visibility="Collapsed"
+                                        Click="BtnSaveBook_OnClick" />
+                                <Button x:Name="btnCancelEdit"
+                                        Content="ביטול ❌"
+                                        Height="34"
+                                        Padding="14,4"
+                                        Margin="8,0,0,0"
+                                        Visibility="Collapsed"
+                                        Click="BtnCancelEdit_OnClick" />
+                                <Button x:Name="btnScrapSelectedTitle"
+                                        Content="🗑️ גרוט כותר נבחר (כל העותקים)"
+                                        Height="34"
+                                        Padding="14,4"
+                                        Margin="8,0,0,0"
+                                        Background="#B91C1C"
+                                        Foreground="White"
+                                        FontWeight="SemiBold"
+                                        IsEnabled="False"
+                                        Click="BtnScrapSelectedTitle_OnClick" />
+                            </WrapPanel>
+                        </Grid>
+                    </TabItem>
+
+                    <TabItem Header="עותקים ומלאי פיזי 📚">
+                        <Grid Margin="8">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <TextBlock x:Name="txtCopiesSummary"
+                                       Text="עותקים עבור ספר זה (סה&quot;כ: 0 | זמינים: 0 | מושאלים: 0)"
+                                       FontSize="14"
+                                       FontWeight="Bold"
+                                       Margin="0,0,0,8" />
+
+                            <CheckBox x:Name="chkShowScrappedCopies"
+                                      Grid.Row="1"
+                                      Content="🗂️ הצג עותקים גרוטים (ארכיון)"
+                                      Margin="0,0,0,8"
+                                      Checked="ChkShowScrappedCopies_OnCheckedChanged"
+                                      Unchecked="ChkShowScrappedCopies_OnCheckedChanged" />
+
+                            <DataGrid Grid.Row="2"
+                                      x:Name="gridCopies"
+                                      AutoGenerateColumns="False"
+                                      IsReadOnly="True"
+                                      CanUserAddRows="False"
+                                      HeadersVisibility="Column"
+                                      GridLinesVisibility="Horizontal"
+                                      RowHeaderWidth="0"
+                                      Margin="0,0,0,10"
+           EnableRowVirtualization="True"
+           EnableColumnVirtualization="True"
+           VirtualizingPanel.IsVirtualizing="True"
+           VirtualizingPanel.VirtualizationMode="Recycling">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="ברקוד עותק" Binding="{Binding Barcode}" Width="*" />
+                                    <DataGridTemplateColumn Header="סטטוס" Width="100">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Border CornerRadius="6" Padding="8,2" HorizontalAlignment="Center">
+                                                    <Border.Style>
+                                                        <Style TargetType="Border">
+                                                            <Setter Property="Background" Value="#FEF3C7" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding StatusDisplay}" Value="זמין">
+                                                                    <Setter Property="Background" Value="#D1FAE5" />
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding StatusDisplay}" Value="מושאל">
+                                                                    <Setter Property="Background" Value="#FEF3C7" />
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding StatusDisplay}" Value="גרוט">
+                                                                    <Setter Property="Background" Value="#F3F4F6" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Border.Style>
+                                                    <TextBlock Text="{Binding StatusDisplay}" FontWeight="SemiBold">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Foreground" Value="#92400E" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding StatusDisplay}" Value="זמין">
+                                                                        <Setter Property="Foreground" Value="#065F46" />
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding StatusDisplay}" Value="מושאל">
+                                                                        <Setter Property="Foreground" Value="#92400E" />
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding StatusDisplay}" Value="גרוט">
+                                                                        <Setter Property="Foreground" Value="#374151" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                </Border>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTextColumn Header="חניך משאיל" Binding="{Binding BorrowerName}" Width="2*" />
+                                    <DataGridTemplateColumn Header="פעולה" Width="120">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                    <Button Content="🗑️ גריטה"
+                                                            Padding="8,2"
+                                                            Margin="0,0,6,0"
+                                                            Tag="{Binding Barcode}"
+                                                            CommandParameter="{Binding Barcode}"
+                                                            ToolTip="סימון עותק כבלאי והוצאה מהמלאי הפעיל"
+                                                            Click="BtnScrapCopy_OnClick">
+                                                        <Button.Style>
+                                                            <Style TargetType="Button">
+                                                                <Setter Property="Visibility" Value="Visible" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding StatusDisplay}" Value="גרוט">
+                                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Button.Style>
+                                                    </Button>
+                                                    <Button Content="♻️ שחזר"
+                                                            Padding="8,2"
+                                                            CommandParameter="{Binding Barcode}"
+                                                            ToolTip="החזרת עותק מגריטה למלאי זמין"
+                                                            Click="BtnRestoreScrappedCopy_OnClick">
+                                                        <Button.Style>
+                                                            <Style TargetType="Button">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding StatusDisplay}" Value="גרוט">
+                                                                        <Setter Property="Visibility" Value="Visible" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Button.Style>
+                                                    </Button>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <Grid Grid.Row="3" VerticalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <TextBox x:Name="txtNewCopyBarcode"
+                                         Grid.Row="0"
+                                         Grid.Column="0"
+                                         Height="34"
+                                         VerticalContentAlignment="Center"
+                                         KeyDown="TxtNewCopyBarcode_OnKeyDown" />
+                                <Button Grid.Row="0"
+                                        Grid.Column="1"
+                                        Content="הוסף עותק למלאי ➕"
+                                        Height="34"
+                                        Padding="14,4"
+                                        Margin="8,0,0,0"
+                                        Click="BtnAddCopyToInventory_OnClick" />
+                                <Button Grid.Row="1"
+                                        Grid.Column="0"
+                                        Grid.ColumnSpan="2"
+                                        Content="➕ הוסף עותק מסומן לתור מדבקות"
+                                        Height="34"
+                                        Padding="14,4"
+                                        Margin="0,8,0,0"
+                                        HorizontalAlignment="Stretch"
+                                        Click="BtnAddSelectedCopyToLabelQueue_OnClick" />
+                            </Grid>
+                        </Grid>
+                    </TabItem>
+
+                    <TabItem Header="🏷️ הדפסת מדבקות">
+                        <Grid Margin="8">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <Border Grid.Row="0" Background="#F8FAFC" BorderBrush="#D8DEE6" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,10">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <WrapPanel Grid.Row="0" Margin="0,0,0,8">
+                                        <TextBlock Text="כמות עותקים חדשים:" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                        <TextBox x:Name="txtNewCopiesToCreate" Width="60" Height="32" VerticalContentAlignment="Center" Margin="0,0,8,0" PreviewTextInput="IntegerOnly_PreviewTextInput" PreviewKeyDown="IntegerOnly_PreviewKeyDown" />
+                                        <Button Content="יצירת עותקים חדשים והדפסה" Height="32" Padding="12,4" Click="BtnCreateNewCopiesAndQueue_OnClick" />
+                                    </WrapPanel>
+
+                                    <Button Grid.Row="1" Content="הדפסת כל הברקודים הקיימים של הכותר" Height="32" Padding="12,4" Margin="0,0,0,8" Click="BtnAddExistingTitleCopiesToQueue_OnClick" />
+
+                                    <WrapPanel Grid.Row="2">
+                                        <TextBlock Text="ברקוד בודד:" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                        <TextBox x:Name="txtSingleBarcodeToQueue" Width="110" Height="32" VerticalContentAlignment="Center" Margin="0,0,8,0" />
+                                        <Button Content="➕ הוסף לתור" Height="32" Padding="12,4" Click="BtnAddSingleBarcodeToQueue_OnClick" />
+                                    </WrapPanel>
+                                </Grid>
+                            </Border>
+
+                            <Grid Grid.Row="1" Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Button Grid.Column="0" Content="🗑️ נקה תור" MinWidth="85" Height="32" Padding="8,4" HorizontalAlignment="Left" Click="BtnClearLabelQueue_OnClick" />
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,0,0">
+                                    <TextBlock Text="התחל ממדבקה:" VerticalAlignment="Center" Margin="0,0,8,0" FontWeight="SemiBold" />
+                                    <ComboBox x:Name="cmbStartLabelNumber" Width="55" Height="32" />
+                                </StackPanel>
+                                <Button Grid.Column="3" Content="🖨️ שלח להדפסה" Height="32" Padding="14,4" Margin="8,0,0,0" Background="#1D4ED8" Foreground="White" FontWeight="SemiBold" Click="BtnPrintLabelQueue_OnClick" />
+                            </Grid>
+
+                            <DataGrid x:Name="gridLabelQueue"
+                                          Grid.Row="2"
+                                          AutoGenerateColumns="False"
+                                          IsReadOnly="True"
+                                          CanUserAddRows="False"
+                                          HeadersVisibility="Column"
+                                          GridLinesVisibility="Horizontal"
+                                          RowHeaderWidth="0"
+                                          SelectionMode="Single"
+                                          SelectionChanged="GridLabelQueue_OnSelectionChanged"
+                                          MinHeight="80"
+                                          Margin="0,0,0,10"
+            EnableRowVirtualization="True"
+           EnableColumnVirtualization="True"
+           VirtualizingPanel.IsVirtualizing="True"
+           VirtualizingPanel.VirtualizationMode="Recycling">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="ברקוד" Binding="{Binding Barcode}" Width="*" />
+                                        <DataGridTextColumn Header="שם כותר" Binding="{Binding BookTitle}" Width="2*" />
+                                        <DataGridTextColumn Header="קוד" Binding="{Binding BookCode}" Width="*" />
+                                        <DataGridTemplateColumn Header="פעולה" Width="90">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Button Content="הסר ✕" Padding="8,2" CommandParameter="{Binding Barcode}" Click="BtnRemoveLabelQueueItem_OnClick" />
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </TabItem>
+                </TabControl>
+
+                <Border Grid.Row="2"
+                        Margin="0,10,0,0"
+                        Padding="10,6"
+                        CornerRadius="6"
+                        Background="#1D4ED8">
+                    <TextBlock x:Name="txtStatus"
+                               Text="מוכן"
+                               Foreground="White"
+                               FontWeight="SemiBold"
+                               TextWrapping="Wrap" />
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

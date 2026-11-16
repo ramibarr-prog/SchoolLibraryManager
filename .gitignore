@@ -1,0 +1,46 @@
+# build / IDE
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.csproj.Backup.tmp
+_health_snippet.txt
+
+# databases and data
+*.mdb
+*.accdb
+*.ldb
+*.laccdb
+Data/
+Backups/
+*.xlsx
+*.xls
+*.csv
+
+# logs and flags
+ErrorLog*.txt
+BackupFailed.flag
+*.log
+
+# signing
+*.pfx
+*.snk
+*.cer
+
+# publish output
+publish/
+
+# internal working files and docs
+all_code.txt
+FullProjectCode.txt
+BUG_TRACKER.md
+ArchitectureSchema.md
+DB_SCHEMA.md
+SystemDocumentation.md
+backup.bat
+deploy.ps1
+tmp_patch.ps1
+SchoolLibraryManager/.github/stepByStepPrompts.txt
+
+**/copilot-instructions.md

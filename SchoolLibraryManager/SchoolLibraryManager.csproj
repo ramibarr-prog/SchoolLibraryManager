@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dapper" Version="2.1.89" />
+    <PackageReference Include="MiniExcel" Version="1.46.0" />
+    <PackageReference Include="System.Data.OleDb" Version="10.0.13" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Data\*.mdb;Data\*.accdb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </Content>
+    <Content Include="Fonts\LibreBarcode39-Regular.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory><ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </Content>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Fonts\LibreBarcode39-Regular.ttf" />
+    <Resource Include="Assets\school_logo.png" />
+  </ItemGroup>
+
+  <Target Name="SignOutput" AfterTargets="Build" Condition="'$(OS)' == 'Windows_NT'">
+    <Exec ContinueOnError="true" Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;&amp; { $cert = Get-ChildItem -Path Cert:\CurrentUser\My | Where-Object { $_.Subject -eq 'CN=SchoolLibraryDev' } | Select-Object -First 1; if (-not $cert) { return }; $files = @('$(TargetPath)','$(TargetDir)$(AssemblyName).exe') | Where-Object { Test-Path $_ } | Select-Object -Unique; foreach ($file in $files) { Set-AuthenticodeSignature -FilePath $file -Certificate $cert | Out-Null } }&quot;" />
+  </Target>
+
+</Project>

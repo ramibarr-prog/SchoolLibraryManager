@@ -1,0 +1,468 @@
+﻿<Window x:Class="SchoolLibraryManager.StudentsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="חניכים ותשלומים"
+        Height="780"
+        Width="1420"
+        MinWidth="1200"
+        MinHeight="700"
+        WindowStartupLocation="CenterScreen"
+        FlowDirection="RightToLeft"
+        FontFamily="Segoe UI"
+        Background="#F8FAFC">
+    <Window.Resources>
+        <Style TargetType="TextBox">
+            <Setter Property="Height" Value="34" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="TextAlignment" Value="Right" />
+            <Setter Property="Padding" Value="8,0" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+        </Style>
+        <Style TargetType="Button">
+            <Setter Property="Height" Value="34" />
+            <Setter Property="Padding" Value="14,4" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="Background" Value="#1D4ED8" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderBrush" Value="#1E40AF" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#EEF2FF" />
+            <Setter Property="Foreground" Value="#1F2937" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+        </Style>
+    </Window.Resources>
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0"
+                Background="#F5F7FA"
+                BorderBrush="#D8DEE6"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="12"
+                Margin="0,0,0,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0"
+                           Text="חניכים ותשלומים"
+                           FontSize="22"
+                           FontWeight="Bold"
+                           Foreground="#1F2937"
+                           VerticalAlignment="Center"
+                           Margin="0,0,16,0" />
+
+                <TextBlock Grid.Column="2"
+                           Text="חיפוש חניך:"
+                           FontWeight="SemiBold"
+                           VerticalAlignment="Center"
+                           Margin="0,0,8,0" />
+
+                 <TextBox Grid.Column="3"
+                         x:Name="TxtStudentSearch"
+                         Width="240"
+                          TextChanged="TxtStudentSearch_OnTextChanged"
+                         KeyDown="TxtStudentSearch_OnKeyDown" />
+
+                <TextBlock Grid.Column="4"
+                           Text="כיתה:"
+                           FontWeight="SemiBold"
+                           VerticalAlignment="Center"
+                           Margin="0,0,8,0" />
+
+                <ComboBox Grid.Column="5"
+                          x:Name="CmbClassFilter"
+                          Width="170"
+                          Height="34"
+                          DisplayMemberPath="ClassName"
+                          SelectedValuePath="ClassID"
+                           SelectionChanged="CmbClassFilter_OnSelectionChanged"
+                          Margin="0,0,8,0" />
+
+                <CheckBox Grid.Column="6"
+                          x:Name="ChkShowInactiveStudents"
+                          Content="הצג לא פעילים (ארכיון)"
+                          VerticalAlignment="Center"
+                          Margin="8,0,8,0"
+                          Checked="ChkShowInactiveStudents_OnCheckedChanged"
+                          Unchecked="ChkShowInactiveStudents_OnCheckedChanged" />
+
+                <Button Grid.Column="7"
+                         Content="נקה ✕"
+                        Width="90"
+                         Background="#6B7280"
+                         BorderBrush="#4B5563"
+                         Click="BtnClearSearch_OnClick" />
+
+                <Button Grid.Column="8"
+                        x:Name="BtnAddManualStudent"
+                        Content="➕ הוספה ידנית"
+                        Margin="8,0,0,0"
+                        Background="#16A34A"
+                        BorderBrush="#15803D"
+                        Click="BtnAddManualStudent_OnClick" />
+
+                <Button Grid.Column="9"
+                        x:Name="BtnDeleteSelectedStudent"
+                        Content="🗑️ הסרה ידנית / סימון כלא-פעיל"
+                        Margin="8,0,0,0"
+                        Background="#DC2626"
+                        BorderBrush="#B91C1C"
+                        Click="BtnDeleteSelectedStudent_OnClick" />
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="7*" />
+                <ColumnDefinition Width="4*" />
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0"
+                    Background="White"
+                    BorderBrush="#D8DEE6"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="12"
+                    Margin="10,0,0,0">
+                     <DockPanel LastChildFill="True">
+                    <TextBlock DockPanel.Dock="Top"
+                               Text="רשימת חניכים"
+                               FontSize="18"
+                               FontWeight="Bold"
+                               Margin="0,0,0,8" />
+
+                    <DataGrid x:Name="GridStudents"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserAddRows="False"
+                              HeadersVisibility="Column"
+                              GridLinesVisibility="Horizontal"
+                              RowHeaderWidth="0"
+                              SelectionMode="Single"
+                               SelectionUnit="FullRow"
+                              PreviewMouseDoubleClick="GridStudents_PreviewMouseDoubleClick"
+                              SelectionChanged="GridStudents_OnSelectionChanged"
+           EnableRowVirtualization="True"
+           EnableColumnVirtualization="True"
+           VirtualizingPanel.IsVirtualizing="True"
+           VirtualizingPanel.VirtualizationMode="Recycling">
+                        <DataGrid.ItemContainerStyle>
+                            <Style TargetType="DataGridRow">
+                                <Style.Resources>
+                                    <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="#BFDBFE" />
+                                    <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}" Color="#1E3A8A" />
+                                </Style.Resources>
+                                <EventSetter Event="MouseDoubleClick" Handler="Row_MouseDoubleClick"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding PaymentStatus}" Value="שולם">
+                                        <Setter Property="Background" Value="#E8F6EC" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding PaymentStatus}" Value="פטור">
+                                        <Setter Property="Background" Value="#EAF2FF" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding PaymentStatus}" Value="לא שולם">
+                                        <Setter Property="Background" Value="#FECACA" />
+                                        <Setter Property="Foreground" Value="#991B1B" />
+                                    </DataTrigger>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="#BFDBFE" />
+                                        <Setter Property="Foreground" Value="#1E3A8A" />
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.ItemContainerStyle>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ת.ז" Binding="{Binding stuID}" Width="*" />
+                            <DataGridTextColumn Header="שם פרטי" Binding="{Binding stuFname}" Width="*" />
+                            <DataGridTextColumn Header="שם משפחה" Binding="{Binding stuLname}" Width="*" />
+                            <DataGridTextColumn Header="כיתה" Binding="{Binding ClassName}" Width="*" />
+                            <DataGridTextColumn Header="טלפון" Binding="{Binding stuPhone}" Width="*" />
+                            <DataGridTextColumn Header="סטטוס תשלום" Binding="{Binding PaymentStatus}" Width="*" />
+                            <DataGridTextColumn Header="השאלות פעילות" Binding="{Binding ActiveLoansCount}" Width="*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </Border>
+
+            <Border Grid.Column="1"
+                    Background="White"
+                    BorderBrush="#D8DEE6"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="12">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                     <StackPanel Grid.Row="0" Margin="0,0,0,10">
+                        <Grid Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0"
+                                       Text="פרטי חניך נבחר"
+                                       FontSize="18"
+                                       FontWeight="Bold"
+                                       VerticalAlignment="Center" />
+                            <Button Grid.Column="1"
+                                    x:Name="BtnEditStudent"
+                                    Content="ערוך"
+                                    Margin="8,0,0,0"
+                                    Background="#2563EB"
+                                    BorderBrush="#1D4ED8"
+                                    Click="BtnEditStudent_OnClick" />
+                            <Button Grid.Column="2"
+                                    x:Name="BtnCancelEditStudent"
+                                    Content="בטל"
+                                    Margin="8,0,0,0"
+                                    Background="#6B7280"
+                                    BorderBrush="#4B5563"
+                                    IsEnabled="False"
+                                    Click="BtnCancelEditStudent_OnClick" />
+                        </Grid>
+                        <Border Background="#F8FAFC" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="6" Padding="10">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="ת.ז:" VerticalAlignment="Center" Margin="0,0,8,6" FontWeight="SemiBold" />
+                                <TextBox Grid.Row="0"
+                                         Grid.Column="1"
+                                         x:Name="TxtCardStuId"
+                                         Margin="0,0,8,6"
+                                         IsReadOnly="True"
+                                         Text="{Binding ElementName=GridStudents, Path=SelectedItem[stuID], Mode=OneWay, TargetNullValue=''}" />
+
+                                <TextBlock Grid.Row="0" Grid.Column="2" Text="שם פרטי:" VerticalAlignment="Center" Margin="0,0,8,6" FontWeight="SemiBold" />
+                                <TextBox Grid.Row="0"
+                                         Grid.Column="3"
+                                         x:Name="TxtCardFirstName"
+                                         Margin="0,0,0,6"
+                                         IsReadOnly="True"
+                                         Background="#F3F4F6"
+                                         Text="{Binding ElementName=GridStudents, Path=SelectedItem[stuFname], Mode=OneWay, TargetNullValue=''}" />
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="שם משפחה:" VerticalAlignment="Center" Margin="0,0,8,6" FontWeight="SemiBold" />
+                                <TextBox Grid.Row="1"
+                                         Grid.Column="1"
+                                         x:Name="TxtCardLastName"
+                                         Margin="0,0,8,6"
+                                         IsReadOnly="True"
+                                         Background="#F3F4F6"
+                                         Text="{Binding ElementName=GridStudents, Path=SelectedItem[stuLname], Mode=OneWay, TargetNullValue=''}" />
+
+                                <TextBlock Grid.Row="1" Grid.Column="2" Text="כיתה:" VerticalAlignment="Center" Margin="0,0,8,6" FontWeight="SemiBold" />
+                                <ComboBox Grid.Row="1"
+                                          Grid.Column="3"
+                                          x:Name="CmbCardClass"
+                                          Margin="0,0,0,6"
+                                          Height="34"
+                                          IsEnabled="False"
+                                          DisplayMemberPath="ClassName"
+                                          SelectedValuePath="ClassID" />
+
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="טלפון:" VerticalAlignment="Center" Margin="0,0,8,6" FontWeight="SemiBold" />
+                                <TextBox Grid.Row="2"
+                                         Grid.Column="1"
+                                         x:Name="TxtCardPhone"
+                                         Margin="0,0,8,6"
+                                         IsReadOnly="True"
+                                         Background="#F3F4F6"
+                                         Text="{Binding ElementName=GridStudents, Path=SelectedItem[stuPhone], Mode=OneWay, TargetNullValue=''}" />
+
+                                <TextBlock Grid.Row="2" Grid.Column="2" Text="יישוב:" VerticalAlignment="Center" Margin="0,0,8,6" FontWeight="SemiBold" />
+                                <TextBox Grid.Row="2"
+                                         Grid.Column="3"
+                                         x:Name="TxtCardCity"
+                                         Margin="0,0,0,6"
+                                         IsReadOnly="True"
+                                         Background="#F3F4F6"
+                                         Text="{Binding ElementName=GridStudents, Path=SelectedItem[stuCity], Mode=OneWay, TargetNullValue=''}" />
+
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="הערות:" VerticalAlignment="Top" Margin="0,4,8,0" FontWeight="SemiBold" />
+                                <TextBox Grid.Row="3"
+                                         Grid.Column="1"
+                                         Grid.ColumnSpan="3"
+                                         x:Name="TxtCardRemarks"
+                                          Height="30"
+                                          MinHeight="25"
+                                          MaxHeight="35"
+                                          AcceptsReturn="False"
+                                          TextWrapping="NoWrap"
+                                         IsReadOnly="True"
+                                         Background="#F3F4F6"
+                                          VerticalContentAlignment="Center"
+                                         Margin="0,0,0,0"
+                                         Text="{Binding ElementName=GridStudents, Path=SelectedItem[stuRemarks], Mode=OneWay, TargetNullValue=''}" />
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+
+                    <Border Grid.Row="1"
+                            BorderBrush="#D8DEE6"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="10"
+                            Background="#F8FAFC"
+                            Margin="0,0,0,10">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0"
+                                       Text="פטור תשלום לשנה הנוכחית"
+                                       FontWeight="Bold"
+                                       Margin="0,0,0,8" />
+
+                            <Grid Grid.Row="1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <CheckBox Grid.Column="0"
+                                          x:Name="ChkExemptCurrentYear"
+                                          Content="הגדר פטור מתשלום לשנה הנוכחית"
+                                          FontWeight="SemiBold"
+                                          VerticalAlignment="Center"
+                                          Margin="0,0,12,0"
+                                          Checked="ChkExemptCurrentYear_OnCheckedChanged"
+                                          Unchecked="ChkExemptCurrentYear_OnCheckedChanged" />
+
+                                <Border Grid.Column="1"
+                                        x:Name="PaymentStatusBadge"
+                                        CornerRadius="10"
+                                        Background="#FEE2E2"
+                                        Padding="10,4"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Center">
+                                    <TextBlock x:Name="TxtPaymentStatusBadge"
+                                               Text="✗ טרם שולם לשנה הנוכחית"
+                                               FontWeight="SemiBold"
+                                               Foreground="#991B1B" />
+                                </Border>
+                            </Grid>
+                        </Grid>
+                    </Border>
+
+                    <DockPanel Grid.Row="2">
+                        <TextBlock DockPanel.Dock="Top"
+                                   Text="ספרים מושאלים לחניך"
+                                   FontWeight="Bold"
+                                   Margin="0,0,0,6" />
+                        <DataGrid x:Name="GridActiveLoans"
+                                  AutoGenerateColumns="False"
+                                  IsReadOnly="True"
+                                  CanUserAddRows="False"
+                                  HeadersVisibility="Column"
+                                  GridLinesVisibility="Horizontal"
+                                   RowHeaderWidth="0"
+                                   SelectionUnit="FullRow"
+                                   AlternatingRowBackground="#F8FAFC"
+           EnableRowVirtualization="True"
+           EnableColumnVirtualization="True"
+           VirtualizingPanel.IsVirtualizing="True"
+           VirtualizingPanel.VirtualizationMode="Recycling">
+                            <DataGrid.CellStyle>
+                                <Style TargetType="DataGridCell">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsOverdue}" Value="1">
+                                            <Setter Property="Background" Value="#FFCDD2" />
+                                            <Setter Property="Foreground" Value="#991B1B" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGrid.CellStyle>
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="ברקוד" Binding="{Binding Barcode}" Width="*" />
+                                <DataGridTextColumn Header="כותר" Binding="{Binding Title}" Width="2*" />
+                                <DataGridTextColumn Header="תאריך השאלה" Binding="{Binding DateBorrowed, StringFormat={}{0:dd/MM/yyyy}}" Width="*" />
+                                <DataGridTextColumn Header="תאריך החזרה" Binding="{Binding DateToReturn, StringFormat={}{0:dd/MM/yyyy}}" Width="*" />
+                                <DataGridTemplateColumn Header="" Width="72" IsReadOnly="False">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <Button Content="✏️"
+                                                        Width="26"
+                                                        Height="24"
+                                                        Padding="0"
+                                                        Margin="0,0,4,0"
+                                                        ToolTip="הארכת מועד החזרה"
+                                                        Click="BtnExtendLoan_OnClick" />
+                                                <Button Content="🗑️"
+                                                        Width="26"
+                                                        Height="24"
+                                                        Padding="0"
+                                                        Margin="0"
+                                                        ToolTip="גריטת עותק (אובדן/תשלום)"
+                                                        Click="BtnScrapLoanCopy_OnClick" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Border Grid.Row="2"
+                Background="#F5F7FA"
+                BorderBrush="#D8DEE6"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="10"
+                Margin="0,12,0,0">
+            <Grid>
+                <TextBlock x:Name="TxtStatus"
+                           Text="מוכן"
+                           VerticalAlignment="Center"
+                           FontWeight="SemiBold"
+                           Foreground="#1F2937" />
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
