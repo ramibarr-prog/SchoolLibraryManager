@@ -42,19 +42,43 @@
                     </Grid.RowDefinitions>
 
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                        <TextBlock Text="סינון לפי כיתה:"
-                                   VerticalAlignment="Center"
+                        <TextBlock Text="סינון לפי כיתות:"
+                                   VerticalAlignment="Top"
                                    FontWeight="SemiBold"
-                                   Margin="0,0,8,0" />
-                        <ComboBox x:Name="CmbOverdueClass"
-                                  Width="180"
-                                  Height="32"
-                                  DisplayMemberPath="ClassName"
-                                  SelectedValuePath="ClassID" />
+                                   Margin="0,6,8,0" />
+                        <ListBox x:Name="LstOverdueClasses"
+                                 Width="200"
+                                 MaxHeight="120"
+                                 SelectionMode="Multiple"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox Content="{Binding ClassName}"
+                                              IsChecked="{Binding IsSelected, Mode=TwoWay, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <StackPanel Margin="8,0,0,0">
+                            <Button Content="בחר הכל" Width="90" Height="28" Click="BtnSelectAllOverdueClasses_OnClick" />
+                            <Button Content="נקה הכל" Width="90" Height="28" Margin="0,4,0,0" Click="BtnClearOverdueClasses_OnClick" />
+                        </StackPanel>
+                        <StackPanel Margin="16,0,0,0" VerticalAlignment="Top">
+                            <RadioButton x:Name="RbOverdueBooks"
+                                         Content="ספרים באיחור"
+                                         GroupName="OverdueReportType"
+                                         IsChecked="True"
+                                         Checked="OverdueReportType_OnChanged" />
+                            <RadioButton x:Name="RbNoLoansThisYear"
+                                         Content="חניכים ללא השאלות השנה"
+                                         GroupName="OverdueReportType"
+                                         Margin="0,6,0,0"
+                                         Checked="OverdueReportType_OnChanged" />
+                        </StackPanel>
                         <Button Content="רענן דוח"
                                 Width="110"
                                 Height="32"
-                                Margin="8,0,0,0"
+                                Margin="16,0,0,0"
+                                VerticalAlignment="Top"
                                 Click="BtnRefreshOverdue_OnClick" />
                     </StackPanel>
 
@@ -88,11 +112,28 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
+                             </DataGrid.Columns>
+                         </DataGrid>
 
-                    <Button Grid.Row="2"
-                            Content="הדפס דוח איחורים / פתקי תזכורת 🖨️"
+                        <DataGrid Grid.Row="1"
+                                  x:Name="GridNoLoans"
+                                  Visibility="Collapsed"
+                                  AutoGenerateColumns="False"
+                                  IsReadOnly="True"
+                                  CanUserAddRows="False"
+                                  HeadersVisibility="Column"
+                                  GridLinesVisibility="Horizontal"
+                                  RowHeaderWidth="0">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="ת.ז" Binding="{Binding stuID}" Width="*" />
+                                <DataGridTextColumn Header="שם החניך" Binding="{Binding StudentName}" Width="2*" />
+                                <DataGridTextColumn Header="כיתה" Binding="{Binding ClassName}" Width="*" />
+                                <DataGridTextColumn Header="טלפון" Binding="{Binding stuPhone}" Width="*" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <Button Grid.Row="2"
+                                Content="הדפס דוח איחורים / פתקי תזכורת 🖨️"
                             Height="34"
                             Width="300"
                             Margin="0,10,0,0"

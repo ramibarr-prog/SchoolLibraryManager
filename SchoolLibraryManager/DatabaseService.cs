@@ -3580,7 +3580,62 @@ public class DatabaseService
         }
     }
 
-    public DataTable GetOverdueLoans(string? classFilter = null)
+    private static List<string> NormalizeClassList(List<string>? classes)
+    {
+        return (classes ?? new List<string>())
+            .Select(c => (c ?? string.Empty).Trim())
+            .Where(c => c.Length > 0 && c != "הכל")
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+    }
+
+    public DataTable GetStudentsWithNoLoansThisYear(List<string> classes, string currentSchoolYear)
+    {
+        var dt = new DataTable();
+        using var connection = CreateOpenConnection();
+
+        var (from, toExclusive) = GetSchoolYearDateRange(currentSchoolYear);
+        var normalizedClasses = NormalizeClassList(classes);
+
+        var conditions = new List<string>
+        {
+            "(s.stuClassID IS NULL OR CStr(s.stuClassID) <> '9999')",
+            "NOT EXISTS (SELECT 1 FROM [Transaction] t WHERE t.stuID = s.stuID AND t.History = '0')",
+            "NOT EXISTS (SELECT 1 FROM [History] h WHERE h.stuID = s.stuID AND ((h.DateOfTrans >= ? AND h.DateOfTrans < ?) OR (h.DateOfReturn >= ? AND h.DateOfReturn < ?)))"
+        };
+
+        if (normalizedClasses.Count > 0)
+        {
+            conditions.Add("Trim(CStr(IIF(s.stuClassID IS NULL, '', s.stuClassID))) IN (" + string.Join(", ", normalizedClasses.Select(_ => "?")) + ")");
+        }
+
+        var sql = $@"SELECT s.stuID,
+                            Trim(s.stuFname & ' ' & s.stuLname) AS StudentName,
+                            IIF(IsNull(c.ClassName), Trim(CStr(IIF(s.stuClassID IS NULL, '', s.stuClassID))), c.ClassName) AS ClassName,
+                            s.stuPhone
+                     FROM [Student] s
+                     LEFT JOIN [Classes] c ON s.stuClassID = c.ClassID
+                     WHERE {string.Join(" AND ", conditions)}
+                     ORDER BY c.ClassName, s.stuLname, s.stuFname";
+
+        using var cmd = new OleDbCommand(sql, connection);
+        for (var i = 0; i < 2; i++)
+        {
+            cmd.Parameters.Add("@pFrom" + i, OleDbType.Date).Value = from;
+            cmd.Parameters.Add("@pTo" + i, OleDbType.Date).Value = toExclusive;
+        }
+
+        for (var i = 0; i < normalizedClasses.Count; i++)
+        {
+            cmd.Parameters.AddWithValue("@pClass" + i, normalizedClasses[i]);
+        }
+
+        using var adapter = new OleDbDataAdapter(cmd);
+        adapter.Fill(dt);
+        return dt;
+    }
+
+    public DataTable GetOverdueLoans(List<string>? classes = null)
     {
         var dt = new DataTable();
         using var connection = CreateOpenConnection();
@@ -3588,15 +3643,16 @@ public class DatabaseService
         var conditions = new List<string>
         {
             "t.History = '0'",
-            "t.DateToReturn < ?"
+            "t.DateToReturn < ?",
+            "(s.stuClassID IS NULL OR CStr(s.stuClassID) <> '9999')"
         };
 
-        var normalizedClassFilter = (classFilter ?? string.Empty).Trim();
-        var hasClassFilter = !string.IsNullOrWhiteSpace(normalizedClassFilter) && normalizedClassFilter != "הכל";
+        var normalizedClasses = NormalizeClassList(classes);
+        var hasClassFilter = normalizedClasses.Count > 0;
 
         if (hasClassFilter)
         {
-            conditions.Add("Trim(CStr(IIF(s.stuClassID IS NULL, '', s.stuClassID))) = ?");
+            conditions.Add("Trim(CStr(IIF(s.stuClassID IS NULL, '', s.stuClassID))) IN (" + string.Join(", ", normalizedClasses.Select(_ => "?")) + ")");
         }
 
         var whereClause = "WHERE " + string.Join(" AND ", conditions);
@@ -3624,9 +3680,9 @@ public class DatabaseService
         cmd.Parameters.Add("@pToday1", OleDbType.Date).Value = today;
         cmd.Parameters.Add("@pDueDate", OleDbType.Date).Value = today;
 
-        if (hasClassFilter)
+        for (var i = 0; i < normalizedClasses.Count; i++)
         {
-            cmd.Parameters.AddWithValue("@pClass", normalizedClassFilter);
+            cmd.Parameters.AddWithValue("@pClass" + i, normalizedClasses[i]);
         }
 
         using var adapter = new OleDbDataAdapter(cmd);

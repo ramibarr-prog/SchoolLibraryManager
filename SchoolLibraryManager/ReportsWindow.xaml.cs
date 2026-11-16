@@ -12,6 +12,7 @@ public partial class ReportsWindow : Window
     private DataTable _overdueTable = new();
     private DataTable _unpaidTable = new();
     private DataTable _activeLoansTable = new();
+    private DataTable _noLoansTable = new();
 
     public ReportsWindow(DatabaseService dbService)
     {
@@ -60,8 +61,7 @@ public partial class ReportsWindow : Window
             items.Add(new ClassFilterItem(id, string.IsNullOrWhiteSpace(name) ? ClassFormatter.ToDisplay(id) : name));
         }
 
-        CmbOverdueClass.ItemsSource = items.ToList();
-        CmbOverdueClass.SelectedValue = "הכל";
+        LstOverdueClasses.ItemsSource = items.Where(i => i.ClassID != "הכל").ToList();
 
         CmbUnpaidClass.ItemsSource = items.ToList();
         CmbUnpaidClass.SelectedValue = "הכל";
@@ -120,10 +120,57 @@ public partial class ReportsWindow : Window
         }
     }
 
+    private List<string> GetSelectedOverdueClasses()
+    {
+        return LstOverdueClasses.SelectedItems
+            .OfType<ClassFilterItem>()
+            .Select(i => i.ClassID)
+            .ToList();
+    }
+
+    private void BtnSelectAllOverdueClasses_OnClick(object sender, RoutedEventArgs e)
+    {
+        LstOverdueClasses.SelectAll();
+    }
+
+    private void BtnClearOverdueClasses_OnClick(object sender, RoutedEventArgs e)
+    {
+        LstOverdueClasses.UnselectAll();
+    }
+
+    private void OverdueReportType_OnChanged(object sender, RoutedEventArgs e)
+    {
+        if (GridOverdue is null || GridNoLoans is null)
+        {
+            return;
+        }
+
+        var noLoans = RbNoLoansThisYear.IsChecked == true;
+        GridOverdue.Visibility = noLoans ? Visibility.Collapsed : Visibility.Visible;
+        GridNoLoans.Visibility = noLoans ? Visibility.Visible : Visibility.Collapsed;
+
+        try
+        {
+            LoadOverdueReport();
+        }
+        catch (Exception ex)
+        {
+            ErrorLogger.Log(ex, "Switch overdue report type failed");
+            SetStatus("טעינת הדוח נכשלה.");
+        }
+    }
+
     private void LoadOverdueReport()
     {
-        var selectedClass = CmbOverdueClass.SelectedValue?.ToString();
-        _overdueTable = _dbService.GetOverdueLoans(selectedClass);
+        var selectedClasses = GetSelectedOverdueClasses();
+        if (RbNoLoansThisYear.IsChecked == true)
+        {
+            _noLoansTable = _dbService.GetStudentsWithNoLoansThisYear(selectedClasses, _dbService.GetCurrentSchoolYear());
+            GridNoLoans.ItemsSource = _noLoansTable.DefaultView;
+            return;
+        }
+
+        _overdueTable = _dbService.GetOverdueLoans(selectedClasses);
         GridOverdue.ItemsSource = _overdueTable.DefaultView;
     }
 
@@ -191,6 +238,22 @@ public partial class ReportsWindow : Window
 
     private void BtnPrintOverdue_OnClick(object sender, RoutedEventArgs e)
     {
+        if (RbNoLoansThisYear.IsChecked == true)
+        {
+            if (_noLoansTable.Rows.Count == 0)
+            {
+                SetStatus("אין נתונים להדפסה.");
+                return;
+            }
+
+            PrintDataTable(
+                "חניכים ללא השאלות השנה",
+                _noLoansTable,
+                ["stuID", "StudentName", "ClassName", "stuPhone"],
+                ["ת.ז", "חניך", "כיתה", "טלפון"]);
+            return;
+        }
+
         if (_overdueTable.Rows.Count == 0)
         {
             SetStatus("אין נתונים להדפסת דוח איחורים.");
