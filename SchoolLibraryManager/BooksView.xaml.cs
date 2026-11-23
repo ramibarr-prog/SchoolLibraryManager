@@ -5,6 +5,7 @@ using System.IO;
 using System.Media;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -212,6 +213,7 @@ public partial class BooksView : UserControl
         ClearBookDetails();
         ClearCopiesGrid();
         txtSelectedBookHeader.Text = "כותר נבחר: -";
+        UpdateBorrowersReportButtonState();
         SetEditMode(false);
     }
 
@@ -230,6 +232,7 @@ public partial class BooksView : UserControl
             ClearBookDetails();
             ClearCopiesGrid();
             txtSelectedBookHeader.Text = "כותר נבחר: -";
+            UpdateBorrowersReportButtonState();
             SetEditMode(false);
             return;
         }
@@ -241,6 +244,7 @@ public partial class BooksView : UserControl
         SetEditMode(false);
         btnEditBook.IsEnabled = !string.IsNullOrWhiteSpace(_selectedBookId);
         btnScrapSelectedTitle.IsEnabled = !string.IsNullOrWhiteSpace(_selectedBookId);
+        UpdateBorrowersReportButtonState();
         await LoadCopiesByBookIdAsync(_selectedBookId);
     }
 
@@ -904,6 +908,16 @@ public partial class BooksView : UserControl
         txtBookYear.Clear();
         txtBookPrice.Clear();
         btnScrapSelectedTitle.IsEnabled = false;
+        UpdateBorrowersReportButtonState();
+    }
+
+    private void UpdateBorrowersReportButtonState()
+    {
+        var reportButton = FindName("btnTitleBorrowersReport") as Button;
+        if (reportButton is not null)
+        {
+            reportButton.IsEnabled = !string.IsNullOrWhiteSpace(_selectedBookId);
+        }
     }
 
     private async void BtnScrapSelectedTitle_OnClick(object sender, RoutedEventArgs e)
@@ -1042,6 +1056,42 @@ public partial class BooksView : UserControl
         SetStatus(added > 0 ? "העותק המסומן נוסף לתור המדבקות." : "העותק כבר קיים בתור המדבקות.");
     }
 
+    private void BtnTitleBorrowersReport_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(_selectedBookId))
+        {
+            SetStatus("יש לבחור כותר לפני הפקת דוח משאילים.");
+            return;
+        }
+
+        try
+        {
+            var borrowers = _databaseService.GetActiveBorrowersForBook(_selectedBookId);
+            if (borrowers.Rows.Count == 0)
+            {
+                SetStatus("אין כרגע משאילים פעילים לכותר זה.");
+                return;
+            }
+
+            var selectedBookTitle = gridBooks.SelectedItem is DataRowView row
+                ? row["bkName"]?.ToString()?.Trim() ?? string.Empty
+                : string.Empty;
+
+            var document = BuildTitleBorrowersReportDocument(selectedBookTitle, _selectedBookId, borrowers);
+            var printDialog = new PrintDialog();
+            if (printDialog.ShowDialog() == true)
+            {
+                printDialog.PrintDocument(((IDocumentPaginatorSource)document).DocumentPaginator, "Active Borrowers By Title");
+                SetStatus("דוח משאילים לכותר נשלח להדפסה.");
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorLogger.Log(ex, $"Title borrowers report failed for bkID '{_selectedBookId}'");
+            SetStatus("הפקת דוח משאילים לכותר נכשלה.");
+        }
+    }
+
     private void GridLabelQueue_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         UpdateLabelPreview(gridLabelQueue.SelectedItem as PrintLabelItem ?? _labelQueue.FirstOrDefault());
@@ -1164,6 +1214,72 @@ public partial class BooksView : UserControl
     {
     }
 
+    private FlowDocument BuildTitleBorrowersReportDocument(string? bookTitle, string? bookId, DataTable borrowers)
+    {
+        var title = string.IsNullOrWhiteSpace(bookTitle) ? "ללא כותרת" : bookTitle.Trim();
+        var code = (bookId ?? string.Empty).Trim();
+
+        var document = new FlowDocument
+        {
+            FontFamily = new FontFamily("Segoe UI"),
+            FontSize = 12,
+            PagePadding = new Thickness(40),
+            FlowDirection = FlowDirection.RightToLeft
+        };
+
+        document.Blocks.Add(new Paragraph(new Run("דוח משאילים לכותר מסוים"))
+        {
+            FontSize = 18,
+            FontWeight = FontWeights.Bold,
+            Margin = new Thickness(0, 0, 0, 8)
+        });
+
+        document.Blocks.Add(new Paragraph(new Run($"כותר: {title} | מזהה כותר: {code} | תאריך הפקה: {DateTime.Now:dd/MM/yyyy HH:mm}"))
+        {
+            Margin = new Thickness(0, 0, 0, 12)
+        });
+
+        var table = new Table();
+        table.Columns.Add(new TableColumn { Width = new GridLength(110) });
+        table.Columns.Add(new TableColumn { Width = new GridLength(180) });
+        table.Columns.Add(new TableColumn { Width = new GridLength(120) });
+        table.Columns.Add(new TableColumn { Width = new GridLength(140) });
+
+        var rowGroup = new TableRowGroup();
+        table.RowGroups.Add(rowGroup);
+
+        var header = new TableRow();
+        header.Cells.Add(new TableCell(new Paragraph(new Run("ברקוד עותק"))) { FontWeight = FontWeights.Bold });
+        header.Cells.Add(new TableCell(new Paragraph(new Run("שם חניך"))) { FontWeight = FontWeights.Bold });
+        header.Cells.Add(new TableCell(new Paragraph(new Run("כיתה"))) { FontWeight = FontWeights.Bold });
+        header.Cells.Add(new TableCell(new Paragraph(new Run("תאריך השאלה"))) { FontWeight = FontWeights.Bold });
+        rowGroup.Rows.Add(header);
+
+        foreach (DataRow row in borrowers.Rows)
+        {
+            var barcode = row.Table.Columns.Contains("Barcode") ? row["Barcode"]?.ToString()?.Trim() ?? string.Empty : string.Empty;
+            var studentName = row.Table.Columns.Contains("StudentName") ? row["StudentName"]?.ToString()?.Trim() ?? string.Empty : string.Empty;
+            var className = row.Table.Columns.Contains("ClassName") ? row["ClassName"]?.ToString()?.Trim() ?? string.Empty : string.Empty;
+
+            var loanDateText = string.Empty;
+            if (row.Table.Columns.Contains("LoanDate") && row["LoanDate"] != DBNull.Value)
+            {
+                loanDateText = Convert.ToDateTime(row["LoanDate"], CultureInfo.CurrentCulture).ToString("dd/MM/yyyy", CultureInfo.CurrentCulture);
+            }
+
+            var dataRow = new TableRow();
+            dataRow.Cells.Add(new TableCell(new Paragraph(new Run(string.IsNullOrWhiteSpace(barcode) ? "-" : barcode))));
+            dataRow.Cells.Add(new TableCell(new Paragraph(new Run(string.IsNullOrWhiteSpace(studentName) ? "-" : studentName))));
+            dataRow.Cells.Add(new TableCell(new Paragraph(new Run(string.IsNullOrWhiteSpace(className) ? "-" : className))));
+            dataRow.Cells.Add(new TableCell(new Paragraph(new Run(string.IsNullOrWhiteSpace(loanDateText) ? "-" : loanDateText))));
+            rowGroup.Rows.Add(dataRow);
+        }
+
+        document.Blocks.Add(table);
+        SchoolBranding.AddLetterhead(document);
+        return document;
+    }
+
     private List<DrawingVisual> BuildPrintPages(IReadOnlyList<PrintLabelItem> items, int skip)
     {
         var totalSlots = skip + items.Count;
@@ -1212,11 +1328,11 @@ public partial class BooksView : UserControl
         var title = string.IsNullOrWhiteSpace(item.BookTitle) ? "-" : item.BookTitle;
         DrawCenteredText(context, title, 9.5, FontWeights.SemiBold, new Rect(labelRect.X + 6, labelRect.Y + 17, labelRect.Width - 12, 28));
 
-        var barcodeRect = new Rect(labelRect.X + 10, labelRect.Y + 44, labelRect.Width - 20, 44);
-        DrawCenteredText(context, WrapBarcodeForCode39(item.Barcode), 30, FontWeights.Normal, barcodeRect, BarcodeFontFamily, FlowDirection.LeftToRight);
+        var barcodeRect = new Rect(labelRect.X + 8, labelRect.Y + 42, labelRect.Width - 16, 54);
+        DrawCenteredText(context, WrapBarcodeForCode39(item.Barcode), 34, FontWeights.Normal, barcodeRect, BarcodeFontFamily, FlowDirection.LeftToRight);
 
-        context.DrawRectangle(Brushes.White, null, new Rect(labelRect.X + 2, labelRect.Bottom - 22, labelRect.Width - 4, 20));
-        DrawCenteredText(context, item.Barcode, 11, FontWeights.Bold, new Rect(labelRect.X + 6, labelRect.Bottom - 21, labelRect.Width - 12, 18), new FontFamily("Segoe UI"), FlowDirection.LeftToRight);
+        context.DrawRectangle(Brushes.White, null, new Rect(labelRect.X + 2, labelRect.Bottom - 28, labelRect.Width - 4, 26));
+        DrawCenteredText(context, item.Barcode, 15, FontWeights.Bold, new Rect(labelRect.X + 6, labelRect.Bottom - 27, labelRect.Width - 12, 24), new FontFamily("Segoe UI"), FlowDirection.LeftToRight);
     }
 
     private static void DrawCenteredText(DrawingContext context, string? text, double fontSize, FontWeight weight, Rect target, FontFamily? fontFamily = null, FlowDirection flowDirection = FlowDirection.RightToLeft)

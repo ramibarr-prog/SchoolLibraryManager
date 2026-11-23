@@ -2974,6 +2974,53 @@ public class DatabaseService
         return GetBookCopiesByBookId(bkId, includeScrapped: true);
     }
 
+    public DataTable GetActiveBorrowersForBook(string bkId)
+    {
+        var dt = new DataTable();
+        dt.Columns.Add("StudentId", typeof(string));
+        dt.Columns.Add("StudentName", typeof(string));
+        dt.Columns.Add("ClassName", typeof(string));
+        dt.Columns.Add("Barcode", typeof(string));
+        dt.Columns.Add("LoanDate", typeof(DateTime));
+
+        var cleanId = (bkId ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(cleanId))
+        {
+            return dt;
+        }
+
+        try
+        {
+            using var connection = CreateOpenConnection();
+            var copyLinkColumn = ResolveBookCopyLinkColumn(connection);
+            var escapedCopyLinkColumn = EscapeIdentifier(copyLinkColumn);
+
+            var sql = $@"SELECT t.stuID AS StudentId,
+                                Trim(s.stuFname & ' ' & s.stuLname) AS StudentName,
+                                IIF(IsNull(c.ClassName), Trim(CStr(IIF(s.stuClassID IS NULL, '', s.stuClassID))), c.ClassName) AS ClassName,
+                                t.Barcode,
+                                t.DateOfTrans AS LoanDate
+                         FROM (([Transaction] AS t
+                         LEFT JOIN [Student] AS s ON t.stuID = s.stuID)
+                         LEFT JOIN [Classes] AS c ON s.stuClassID = c.ClassID)
+                         INNER JOIN [BookCopy] AS bc ON t.Barcode = bc.Barcode
+                         WHERE t.History = '0' AND Trim(CStr(bc.{escapedCopyLinkColumn})) = ?
+                         ORDER BY IIF(IsNull(c.ClassName), Trim(CStr(IIF(s.stuClassID IS NULL, '', s.stuClassID))), c.ClassName), s.stuLname, s.stuFname, t.DateOfTrans";
+
+            using var cmd = new OleDbCommand(sql, connection);
+            cmd.Parameters.AddWithValue("@pBookId", cleanId);
+            using var adapter = new OleDbDataAdapter(cmd);
+            adapter.Fill(dt);
+        }
+        catch (Exception ex)
+        {
+            ErrorLogger.Log(ex, $"GetActiveBorrowersForBook failed for bkID '{cleanId}'");
+            throw;
+        }
+
+        return dt;
+    }
+
     public bool TryMarkBookCopyAsScrapped(string barcode, out string message)
     {
         try
@@ -3586,6 +3633,26 @@ public class DatabaseService
             .Select(c => (c ?? string.Empty).Trim())
             .Where(c => c.Length > 0 && c != "הכל")
             .Distinct(StringComparer.Ordinal)
+            .ToList();
+    }
+
+    public List<string> GetPaymentSchoolYears()
+    {
+        var years = new HashSet<string>(StringComparer.Ordinal);
+        using var connection = CreateFreshPaymentReadConnection();
+        using var cmd = new OleDbCommand("SELECT DISTINCT [Year] FROM [Payment] WHERE [Year] IS NOT NULL", connection);
+        using var reader = cmd.ExecuteReader();
+        while (reader != null && reader.Read())
+        {
+            var normalized = NormalizeSchoolYear(reader[0]?.ToString());
+            if (normalized.Length > 0 && TryParseHebrewYear(normalized, out _))
+            {
+                years.Add(normalized);
+            }
+        }
+
+        return years
+            .OrderByDescending(y => TryParseHebrewYear(y, out var hy) ? hy : 0)
             .ToList();
     }
 

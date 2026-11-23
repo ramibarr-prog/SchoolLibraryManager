@@ -133,9 +133,9 @@
                         </DataGrid>
 
                         <Button Grid.Row="2"
-                                Content="הדפס דוח איחורים / פתקי תזכורת 🖨️"
-                            Height="34"
-                            Width="300"
+                                Content="הדפס דוח 🖨️"
+                                Height="34"
+                                Width="300"
                             Margin="0,10,0,0"
                             HorizontalAlignment="Left"
                             Background="#1D4ED8"

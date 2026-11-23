@@ -340,35 +340,28 @@
                                 </Grid.ColumnDefinitions>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
-                                <TextBox x:Name="txtNewCopyBarcode"
-                                         Grid.Row="0"
-                                         Grid.Column="0"
-                                         Height="34"
-                                         VerticalContentAlignment="Center"
-                                         KeyDown="TxtNewCopyBarcode_OnKeyDown" />
                                 <Button Grid.Row="0"
-                                        Grid.Column="1"
-                                        Content="הוסף עותק למלאי ➕"
-                                        Height="34"
-                                        Padding="14,4"
-                                        Margin="8,0,0,0"
-                                        Click="BtnAddCopyToInventory_OnClick" />
-                                <Button Grid.Row="1"
                                         Grid.Column="0"
-                                        Grid.ColumnSpan="2"
                                         Content="➕ הוסף עותק מסומן לתור מדבקות"
                                         Height="34"
                                         Padding="14,4"
-                                        Margin="0,8,0,0"
                                         HorizontalAlignment="Stretch"
+                                        Margin="0,0,8,0"
                                         Click="BtnAddSelectedCopyToLabelQueue_OnClick" />
+                                <Button x:Name="btnTitleBorrowersReport"
+                                        Grid.Row="0"
+                                        Grid.Column="1"
+                                        Content="📋 דוח משאילים לכותר"
+                                        Height="34"
+                                        Padding="12,4"
+                                        IsEnabled="False"
+                                        Click="BtnTitleBorrowersReport_OnClick" />
                             </Grid>
                         </Grid>
                     </TabItem>
 
-                    <TabItem Header="🏷️ הדפסת מדבקות">
+                    <TabItem Header="🏷️ ניהול מדבקות והדפסה">
                         <Grid Margin="8">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
@@ -379,6 +372,7 @@
                             <Border Grid.Row="0" Background="#F8FAFC" BorderBrush="#D8DEE6" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,10">
                                 <Grid>
                                     <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
@@ -396,6 +390,20 @@
                                         <TextBlock Text="ברקוד בודד:" VerticalAlignment="Center" Margin="0,0,8,0" />
                                         <TextBox x:Name="txtSingleBarcodeToQueue" Width="110" Height="32" VerticalContentAlignment="Center" Margin="0,0,8,0" />
                                         <Button Content="➕ הוסף לתור" Height="32" Padding="12,4" Click="BtnAddSingleBarcodeToQueue_OnClick" />
+                                    </WrapPanel>
+
+                                    <WrapPanel Grid.Row="3" Margin="0,6,0,0">
+                                        <TextBlock Text="הוספת עותק ידנית למלאי:" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                        <TextBox x:Name="txtNewCopyBarcode"
+                                                 Width="125"
+                                                 Height="30"
+                                                 VerticalContentAlignment="Center"
+                                                 Margin="0,0,6,0"
+                                                 KeyDown="TxtNewCopyBarcode_OnKeyDown" />
+                                        <Button Content="הוסף עותק למלאי ➕"
+                                                Height="30"
+                                                Padding="10,3"
+                                                Click="BtnAddCopyToInventory_OnClick" />
                                     </WrapPanel>
                                 </Grid>
                             </Border>

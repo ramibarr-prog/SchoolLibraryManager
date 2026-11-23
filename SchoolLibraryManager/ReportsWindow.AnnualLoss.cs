@@ -108,6 +108,19 @@ public partial class ReportsWindow
         }
 
         var choices = DatabaseService.GetSchoolYearChoices(currentYear);
+        try
+        {
+            var paymentYears = _dbService.GetPaymentSchoolYears();
+            if (paymentYears.Count > 0)
+            {
+                choices = paymentYears;
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorLogger.Log(ex, "Annual loss: read payment school years");
+        }
+
         var combo = new ComboBox
         {
             IsEditable = true,
