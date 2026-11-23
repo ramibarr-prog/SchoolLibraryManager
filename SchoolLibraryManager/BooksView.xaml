@@ -420,6 +420,29 @@
                                     <TextBlock Text="התחל ממדבקה:" VerticalAlignment="Center" Margin="0,0,8,0" FontWeight="SemiBold" />
                                     <ComboBox x:Name="cmbStartLabelNumber" Width="55" Height="32" />
                                 </StackPanel>
+                                <Border Grid.Column="2"
+                                        Margin="10,0,10,0"
+                                        Padding="8,5"
+                                        BorderBrush="#D8DEE6"
+                                        BorderThickness="1"
+                                        CornerRadius="6"
+                                        Background="#FFFFFF">
+                                    <StackPanel>
+                                        <TextBlock x:Name="txtLabelPreviewSchoolName"
+                                                   Text="ספריית בית הספר"
+                                                   FontSize="13"
+                                                   FontWeight="Bold"
+                                                   TextAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Margin="0,0,0,3" />
+                                        <TextBlock x:Name="txtLabelPreviewTitle"
+                                                   Text="שם הכותר"
+                                                   FontSize="12"
+                                                   FontWeight="SemiBold"
+                                                   TextAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                </Border>
                                 <Button Grid.Column="3" Content="🖨️ שלח להדפסה" Height="32" Padding="14,4" Margin="8,0,0,0" Background="#1D4ED8" Foreground="White" FontWeight="SemiBold" Click="BtnPrintLabelQueue_OnClick" />
                             </Grid>
 

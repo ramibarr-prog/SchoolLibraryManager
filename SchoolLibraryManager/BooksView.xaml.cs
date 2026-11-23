@@ -1212,6 +1212,8 @@ public partial class BooksView : UserControl
 
     private void UpdateLabelPreview(PrintLabelItem? item)
     {
+        txtLabelPreviewSchoolName.Text = string.IsNullOrWhiteSpace(_schoolName) ? "ספריית בית הספר" : _schoolName;
+        txtLabelPreviewTitle.Text = string.IsNullOrWhiteSpace(item?.BookTitle) ? "שם הכותר" : item!.BookTitle;
     }
 
     private FlowDocument BuildTitleBorrowersReportDocument(string? bookTitle, string? bookId, DataTable borrowers)
@@ -1323,12 +1325,12 @@ public partial class BooksView : UserControl
         var labelRect = new Rect(cellRect.X + 4, cellRect.Y + 4, cellRect.Width - 8, cellRect.Height - 8);
         context.DrawRectangle(Brushes.White, new Pen(new SolidColorBrush((Color)ColorConverter.ConvertFromString("#D1D5DB")), 1), labelRect);
 
-        DrawCenteredText(context, string.IsNullOrWhiteSpace(_schoolName) ? "ספריית בית הספר" : _schoolName, 10.5, FontWeights.Bold, new Rect(labelRect.X + 6, labelRect.Y + 3, labelRect.Width - 12, 14));
+        DrawCenteredText(context, string.IsNullOrWhiteSpace(_schoolName) ? "ספריית בית הספר" : _schoolName, 12.8, FontWeights.Bold, new Rect(labelRect.X + 6, labelRect.Y + 1, labelRect.Width - 12, 20));
 
         var title = string.IsNullOrWhiteSpace(item.BookTitle) ? "-" : item.BookTitle;
-        DrawCenteredText(context, title, 9.5, FontWeights.SemiBold, new Rect(labelRect.X + 6, labelRect.Y + 17, labelRect.Width - 12, 28));
+        DrawCenteredText(context, title, 12.2, FontWeights.SemiBold, new Rect(labelRect.X + 6, labelRect.Y + 24, labelRect.Width - 12, 22));
 
-        var barcodeRect = new Rect(labelRect.X + 8, labelRect.Y + 42, labelRect.Width - 16, 54);
+        var barcodeRect = new Rect(labelRect.X + 8, labelRect.Y + 52, labelRect.Width - 16, 48);
         DrawCenteredText(context, WrapBarcodeForCode39(item.Barcode), 34, FontWeights.Normal, barcodeRect, BarcodeFontFamily, FlowDirection.LeftToRight);
 
         context.DrawRectangle(Brushes.White, null, new Rect(labelRect.X + 2, labelRect.Bottom - 28, labelRect.Width - 4, 26));
