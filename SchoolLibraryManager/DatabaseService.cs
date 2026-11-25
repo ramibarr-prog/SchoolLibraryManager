@@ -4676,6 +4676,65 @@ public class DatabaseService
         return TryAddBook(bkId, bkName, bkAuthor, bkPrice, bkPublish, subjectId, typeId, out message);
     }
 
+    public string GetNextAvailableBookId()
+    {
+        try
+        {
+            using var connection = CreateOpenConnection();
+
+            var existingBookIds = new HashSet<int>();
+            var maxId = 0;
+            using (var booksCmd = new OleDbCommand("SELECT bkID FROM [Book]", connection))
+            using (var reader = booksCmd.ExecuteReader())
+            {
+                while (reader is not null && reader.Read())
+                {
+                    var rawBkId = Convert.ToString(reader["bkID"], CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+                    if (!int.TryParse(rawBkId, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedBkId))
+                    {
+                        continue;
+                    }
+
+                    existingBookIds.Add(parsedBkId);
+                    if (parsedBkId > maxId)
+                    {
+                        maxId = parsedBkId;
+                    }
+                }
+            }
+
+            var occupiedPrefixes = new HashSet<string>(StringComparer.Ordinal);
+            using (var copiesCmd = new OleDbCommand("SELECT Barcode FROM [BookCopy]", connection))
+            using (var reader = copiesCmd.ExecuteReader())
+            {
+                while (reader is not null && reader.Read())
+                {
+                    var barcode = Convert.ToString(reader["Barcode"], CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+                    if (barcode.Length < 3)
+                    {
+                        continue;
+                    }
+
+                    occupiedPrefixes.Add(barcode.Substring(0, 3));
+                }
+            }
+
+            var candidate = Math.Max(maxId + 1, 100);
+            while (existingBookIds.Contains(candidate)
+                   || occupiedPrefixes.Contains(candidate.ToString(CultureInfo.InvariantCulture).Substring(0, 3)))
+            {
+                candidate++;
+            }
+
+            return candidate.ToString(CultureInfo.InvariantCulture);
+        }
+        catch (Exception ex)
+        {
+            ErrorLogger.Log(ex, "GetNextAvailableBookId failed");
+            return string.Empty;
+        }
+    }
+
     public bool TryAddBook(string bkId, string bkName, string bkAuthor, string bkPrice, string bkPublish, int subjectId, int typeId, out string message)
     {
         var cleanId = (bkId ?? string.Empty).Trim();
@@ -4766,6 +4825,26 @@ public class DatabaseService
         using var connection = CreateOpenConnection();
         try
         {
+            using (var existingCmd = new OleDbCommand(
+                "SELECT TOP 1 bc.bkID AS ExistingBkId, b.bkName AS ExistingBookName FROM [BookCopy] AS bc LEFT JOIN [Book] AS b ON bc.bkID = b.bkID WHERE bc.Barcode = ?",
+                connection))
+            {
+                existingCmd.Parameters.AddWithValue("@p1", cleanBarcode);
+                using var reader = existingCmd.ExecuteReader();
+                if (reader is not null && reader.Read())
+                {
+                    var existingBkId = Convert.ToString(reader["ExistingBkId"], CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+                    var existingBookName = Convert.ToString(reader["ExistingBookName"], CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+                    if (string.IsNullOrWhiteSpace(existingBookName))
+                    {
+                        existingBookName = "ללא כותרת";
+                    }
+
+                    message = $"הברקוד {cleanBarcode} כבר קיים במלאי תחת הכותר '{existingBookName}' (קוד {existingBkId}).";
+                    return false;
+                }
+            }
+
             using var cmd = new OleDbCommand("INSERT INTO [BookCopy] (bkID, Barcode, CopyReturnStatus, CopyCondition, EnterDate) VALUES (?, ?, '0', '1', ?)", connection);
             cmd.Parameters.AddWithValue("@p1", cleanBkId);
             cmd.Parameters.AddWithValue("@p2", cleanBarcode);
@@ -4835,10 +4914,11 @@ public class DatabaseService
 
             var created = new List<string>(count);
             var nextSuffix = maxSuffix;
+            var suffixDigits = Math.Max(4, 7 - cleanBkId.Length);
             while (created.Count < count)
             {
                 nextSuffix++;
-                var barcode = $"{cleanBkId}{nextSuffix:D4}";
+                var barcode = $"{cleanBkId}{nextSuffix.ToString($"D{suffixDigits}", CultureInfo.InvariantCulture)}";
                 if (BarcodeExists(connection, tx, barcode))
                 {
                     continue;

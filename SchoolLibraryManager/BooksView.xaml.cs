@@ -564,6 +564,12 @@ public partial class BooksView : UserControl
 
     private string GenerateNextBookId()
     {
+        var nextAvailable = _databaseService.GetNextAvailableBookId();
+        if (!string.IsNullOrWhiteSpace(nextAvailable))
+        {
+            return nextAvailable;
+        }
+
         var maxId = 0;
         foreach (DataRow row in _booksTable.Rows)
         {
