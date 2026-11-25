@@ -3822,14 +3822,14 @@ public class DatabaseService
         int orphanCopies = Convert.ToInt32(new OleDbCommand(orphanSql, connection).ExecuteScalar() ?? 0);
         if (orphanCopies > 0)
         {
-            warnings.Add($"נמצאו {orphanCopies} עותקים ב-BookCopy שמזהה הספר שלהם (bkID) אינו קיים בטבלת Book.");
+            warnings.Add($"נמצאו {orphanCopies} עותקים במלאי שאינם משויכים לאף כותר בקטלוג.");
         }
 
         var dupSql = "SELECT COUNT(*) FROM (SELECT Barcode FROM [BookCopy] GROUP BY Barcode HAVING COUNT(*) > 1)";
         int duplicateBarcodes = Convert.ToInt32(new OleDbCommand(dupSql, connection).ExecuteScalar() ?? 0);
         if (duplicateBarcodes > 0)
         {
-            warnings.Add($"נמצאו {duplicateBarcodes} ברקודים כפולים בטבלת BookCopy!");
+            warnings.Add($"נמצאו {duplicateBarcodes} ברקודים כפולים במלאי (אותו ברקוד רשום ביותר מספר אחד).");
         }
 
         var brokenTransBarcodeSql = @"SELECT COUNT(*) FROM [Transaction] t 
@@ -3838,7 +3838,7 @@ public class DatabaseService
         int brokenTransBarcodes = Convert.ToInt32(new OleDbCommand(brokenTransBarcodeSql, connection).ExecuteScalar() ?? 0);
         if (brokenTransBarcodes > 0)
         {
-            warnings.Add($"נמצאו {brokenTransBarcodes} השאלות פעילות שהברקוד שלהן אינו קיים ב-BookCopy.");
+            warnings.Add($"נמצאו {brokenTransBarcodes} השאלות פעילות של ספרים שהברקוד שלהם לא קיים במלאי.");
         }
 
         var brokenTransStudentSql = @"SELECT COUNT(*) FROM [Transaction] t 
@@ -3847,7 +3847,7 @@ public class DatabaseService
         int brokenTransStudents = Convert.ToInt32(new OleDbCommand(brokenTransStudentSql, connection).ExecuteScalar() ?? 0);
         if (brokenTransStudents > 0)
         {
-            warnings.Add($"נמצאו {brokenTransStudents} השאלות פעילות שהחניך שלהן אינו קיים בטבלת Student.");
+            warnings.Add($"נמצאו {brokenTransStudents} השאלות פעילות המשויכות לחניך שלא נמצא במצבת.");
         }
 
         using (var sampleCmd = new OleDbCommand("SELECT TOP 10 Barcode FROM [BookCopy] ORDER BY EnterDate DESC, Barcode", connection))
@@ -3876,18 +3876,190 @@ public class DatabaseService
         };
     }
 
-    public DataTable GetBrokenActiveLoans()
-    {
-        var dt = new DataTable();
-        using var connection = CreateOpenConnection();
-        var sql = @"SELECT t.Barcode, t.stuID, t.bkID,
+	public DataTable GetDuplicateBarcodesDetails()
+	{
+		var dt = new DataTable();
+		dt.Columns.Add("Barcode", typeof(string));
+		dt.Columns.Add("BookId", typeof(string));
+		dt.Columns.Add("BookName", typeof(string));
+		dt.Columns.Add("CopyConditionText", typeof(string));
+		dt.Columns.Add("LoanStatusText", typeof(string));
+		dt.Columns.Add("BorrowerDisplay", typeof(string));
+
+		try
+		{
+			using var connection = CreateOpenConnection();
+
+			var duplicateBarcodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+			using (var dupCmd = new OleDbCommand("SELECT Barcode FROM [BookCopy] GROUP BY Barcode HAVING COUNT(*) > 1", connection))
+			using (var reader = dupCmd.ExecuteReader())
+			{
+				while (reader is not null && reader.Read())
+				{
+					var barcode = Convert.ToString(reader["Barcode"], CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+					if (!string.IsNullOrWhiteSpace(barcode))
+					{
+						duplicateBarcodes.Add(barcode);
+					}
+				}
+			}
+
+			if (duplicateBarcodes.Count == 0)
+			{
+				return dt;
+			}
+
+			var bookNamesById = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+			using (var booksCmd = new OleDbCommand("SELECT bkID, bkName FROM [Book]", connection))
+			using (var reader = booksCmd.ExecuteReader())
+			{
+				while (reader is not null && reader.Read())
+				{
+					var bookId = Convert.ToString(reader["bkID"], CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+					if (string.IsNullOrWhiteSpace(bookId))
+					{
+						continue;
+					}
+
+					var bookName = Convert.ToString(reader["bkName"], CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+					bookNamesById[bookId] = string.IsNullOrWhiteSpace(bookName) ? "ללא כותרת" : bookName;
+				}
+			}
+
+			var classNameById = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+			using (var classesCmd = new OleDbCommand("SELECT ClassID, ClassName FROM [Classes]", connection))
+			using (var reader = classesCmd.ExecuteReader())
+			{
+				while (reader is not null && reader.Read())
+				{
+					var classId = Convert.ToString(reader["ClassID"], CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+					if (string.IsNullOrWhiteSpace(classId))
+					{
+						continue;
+					}
+
+					classNameById[classId] = Convert.ToString(reader["ClassName"], CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+				}
+			}
+
+			var studentDisplayById = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+			using (var studentsCmd = new OleDbCommand("SELECT stuID, stuFname, stuLname, stuClassID FROM [Student]", connection))
+			using (var reader = studentsCmd.ExecuteReader())
+			{
+				while (reader is not null && reader.Read())
+				{
+					var stuId = Convert.ToString(reader["stuID"], CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+					if (string.IsNullOrWhiteSpace(stuId))
+					{
+						continue;
+					}
+
+					var firstName = Convert.ToString(reader["stuFname"], CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+					var lastName = Convert.ToString(reader["stuLname"], CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+					var fullName = $"{firstName} {lastName}".Trim();
+					if (string.IsNullOrWhiteSpace(fullName))
+					{
+						fullName = stuId;
+					}
+
+					var classCode = Convert.ToString(reader["stuClassID"], CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+					classNameById.TryGetValue(classCode, out var className);
+					var classDisplay = ClassFormatter.ToDisplayName(className, classCode);
+					if (string.IsNullOrWhiteSpace(classDisplay))
+					{
+						classDisplay = ClassFormatter.ToDisplay(classCode);
+					}
+
+					studentDisplayById[stuId] = $"{fullName} ({classDisplay})";
+				}
+			}
+
+			var activeLoanByBarcode = new Dictionary<string, (string StuId, string BkId)>(StringComparer.OrdinalIgnoreCase);
+			using (var transCmd = new OleDbCommand("SELECT Barcode, stuID, bkID FROM [Transaction] WHERE History = '0'", connection))
+			using (var reader = transCmd.ExecuteReader())
+			{
+				while (reader is not null && reader.Read())
+				{
+					var barcode = Convert.ToString(reader["Barcode"], CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+					if (string.IsNullOrWhiteSpace(barcode) || !duplicateBarcodes.Contains(barcode) || activeLoanByBarcode.ContainsKey(barcode))
+					{
+						continue;
+					}
+
+					var stuId = Convert.ToString(reader["stuID"], CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+					var transBkId = Convert.ToString(reader["bkID"], CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+					activeLoanByBarcode[barcode] = (stuId, transBkId);
+				}
+			}
+
+			var rows = new List<(string Barcode, string BookId, string BookName, string CopyConditionText, string LoanStatusText, string BorrowerDisplay)>();
+			using (var copiesCmd = new OleDbCommand("SELECT Barcode, bkID, CopyCondition, CopyReturnStatus FROM [BookCopy]", connection))
+			using (var reader = copiesCmd.ExecuteReader())
+			{
+				while (reader is not null && reader.Read())
+				{
+					var barcode = Convert.ToString(reader["Barcode"], CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+					if (string.IsNullOrWhiteSpace(barcode) || !duplicateBarcodes.Contains(barcode))
+					{
+						continue;
+					}
+
+					var bookId = Convert.ToString(reader["bkID"], CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+					if (!bookNamesById.TryGetValue(bookId, out var bookName) || string.IsNullOrWhiteSpace(bookName))
+					{
+						bookName = "ללא כותרת";
+					}
+
+					var copyCondition = Convert.ToString(reader["CopyCondition"], CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+					var isScrapped = string.Equals(copyCondition, "2", StringComparison.OrdinalIgnoreCase);
+					var copyConditionText = isScrapped ? "גרוט" : "פעיל";
+
+					var hasActiveLoan = activeLoanByBarcode.TryGetValue(barcode, out var activeLoan);
+					var loanStatusText = isScrapped
+						? "גרוט"
+						: (hasActiveLoan ? "מושאל" : "במדף");
+
+					var borrowerDisplay = "-";
+					if (!isScrapped && hasActiveLoan)
+					{
+						var studentDisplay = studentDisplayById.TryGetValue(activeLoan.StuId, out var studentText)
+							? studentText
+							: string.IsNullOrWhiteSpace(activeLoan.StuId)
+								? "חניך לא ידוע"
+								: $"חניך לא במצבת ({activeLoan.StuId})";
+
+						borrowerDisplay = $"{studentDisplay} [כותר בהשאלה: {activeLoan.BkId}]";
+					}
+
+					rows.Add((barcode, bookId, bookName, copyConditionText, loanStatusText, borrowerDisplay));
+				}
+			}
+
+			foreach (var row in rows.OrderBy(r => r.Barcode, StringComparer.OrdinalIgnoreCase).ThenBy(r => r.BookId, StringComparer.OrdinalIgnoreCase))
+			{
+				dt.Rows.Add(row.Barcode, row.BookId, row.BookName, row.CopyConditionText, row.LoanStatusText, row.BorrowerDisplay);
+			}
+		}
+		catch (Exception ex)
+		{
+			ErrorLogger.Log(ex, "GetDuplicateBarcodesDetails failed");
+		}
+
+		return dt;
+	}
+
+	public DataTable GetBrokenActiveLoans()
+	{
+		var dt = new DataTable();
+		using var connection = CreateOpenConnection();
+		var sql = @"SELECT t.Barcode, t.stuID, t.bkID,
 						   IIF(IsNull(s.stuID), 'חניך לא ידוע', (s.stuFname & '') & ' ' & (s.stuLname & '')) AS StudentName,
 						   c.ClassName,
 						   t.DateOfTrans AS LoanDate,
 						   t.DateToReturn AS DueDate,
-						   IIF(IsNull(bc.Barcode), 'ברקוד אינו קיים במלאי (BookCopy)',
-							   IIF(IsNull(s.stuID), 'חניך אינו קיים',
-								   'עותק גרוט רשום כמושאל (שאריות סלקוד)')) AS Reason,
+						   IIF(IsNull(bc.Barcode), 'הברקוד לא קיים במלאי הספרייה',
+							   IIF(IsNull(s.stuID), 'חניך לא נמצא במצבת',
+								   'ספר גרוט שרשום בטעות כמושאל')) AS Reason,
 						   IIF(IsNull(bc.Barcode), 1, 0) AS MissingBarcode,
 						   IIF(IsNull(bc.Barcode), 1, IIF(Trim(bc.CopyCondition & '') IN ('98','99'), 1, 0)) AS AutoClean
 					FROM ((([Transaction] t
@@ -3897,11 +4069,11 @@ public class DatabaseService
 					WHERE t.History = '0'
 					  AND (IsNull(bc.Barcode) OR IsNull(s.stuID) OR Trim(bc.CopyCondition & '') IN ('98','99'))";
 
-        using var cmd = new OleDbCommand(sql, connection);
-        using var adapter = new OleDbDataAdapter(cmd);
-        adapter.Fill(dt);
-        return dt;
-    }
+		using var cmd = new OleDbCommand(sql, connection);
+		using var adapter = new OleDbDataAdapter(cmd);
+		adapter.Fill(dt);
+		return dt;
+	}
 
     private static int CleanOrCloseOrphanedLoanCore(OleDbConnection connection, OleDbTransaction tx, string barcode, ref int historyIndexTracker)
     {

@@ -410,96 +410,154 @@
                     </Grid>
                     </StackPanel>
 
-                    <Grid Grid.Row="2" VerticalAlignment="Stretch">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
+                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <Border Margin="0,0,0,8" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="10" Background="White">
+                                <Grid HorizontalAlignment="Stretch">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
+                                    <Grid Grid.Row="0" Margin="0,0,0,8" HorizontalAlignment="Stretch">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="התראות תקינות" FontWeight="Bold" VerticalAlignment="Center" />
+                                    </Grid>
+                                    <ListBox Grid.Row="1" HorizontalAlignment="Stretch" x:Name="LstHealthWarnings" BorderThickness="0" Background="Transparent" MaxHeight="120">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Message}" Foreground="{Binding Foreground}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,0,6" />
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                </Grid>
+                            </Border>
 
-                        <Border Grid.Row="0" Grid.Column="0" Margin="0,0,0,8" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="10" Background="White">
-<Grid HorizontalAlignment="Stretch">
-<Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-<Grid Grid.Row="0" Margin="0,0,0,8" HorizontalAlignment="Stretch">
-<Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-<TextBlock Grid.Column="0" Text="התראות תקינות" FontWeight="Bold" VerticalAlignment="Center" />
-</Grid>
-                                <ListBox Grid.Row="1" HorizontalAlignment="Stretch" x:Name="LstHealthWarnings" BorderThickness="0" Background="Transparent" MaxHeight="120">
-                                    <ListBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Message}" Foreground="{Binding Foreground}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,0,6" />
-                                        </DataTemplate>
-                                    </ListBox.ItemTemplate>
-                                </ListBox>
-</Grid>
-                        </Border>
+                            <Border x:Name="AnomalousLoansSection" Margin="0,0,0,8" VerticalAlignment="Stretch" Visibility="Collapsed" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="10" Background="White">
+                                <Grid VerticalAlignment="Stretch">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
 
-                        <Border x:Name="AnomalousLoansSection" VerticalAlignment="Stretch" Visibility="Collapsed" Grid.Row="1" Grid.Column="0" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="10" Background="White">
-                            <Grid VerticalAlignment="Stretch">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="*" />
-                                </Grid.RowDefinitions>
+                                    <Grid Grid.Row="0" Margin="0,0,0,8" HorizontalAlignment="Stretch">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="השאלות פעילות חריגות הדורשות טיפול" FontWeight="Bold" VerticalAlignment="Center" />
+                                        <Button x:Name="BtnAutoCleanMissingBarcodeLoans" Cursor="Hand" Grid.Column="1" VerticalAlignment="Center" Margin="16,0,0,0" Padding="14,7" Background="#D97706" Foreground="White" FontWeight="Bold" BorderThickness="0" Visibility="Collapsed" Content="&#x26A1; &#x05E0;&#x05E7;&#x05D4; &#x05D0;&#x05D5;&#x05D8;&#x05D5;&#x05DE;&#x05D8;&#x05D9;&#x05EA; &#x05D4;&#x05E9;&#x05D0;&#x05DC;&#x05D5;&#x05EA; &#x05D7;&#x05E8;&#x05D9;&#x05D2;&#x05D5;&#x05EA;" Click="BtnAutoCleanMissingBarcodeLoans_OnClick">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}" BorderBrush="#92400E" BorderThickness="1">
+                                                        <Border.Effect>
+                                                            <DropShadowEffect Color="Black" Opacity="0.25" BlurRadius="6" ShadowDepth="2" />
+                                                        </Border.Effect>
+                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="Bd" Property="Background" Value="#B45309" />
+                                                            <Setter TargetName="Bd" Property="BorderBrush" Value="#78350F" />
+                                                        </Trigger>
+                                                        <Trigger Property="IsPressed" Value="True">
+                                                            <Setter TargetName="Bd" Property="Background" Value="#92400E" />
+                                                        </Trigger>
+                                                        <Trigger Property="IsEnabled" Value="False">
+                                                            <Setter Property="Opacity" Value="0.5" />
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                        </Button>
+                                    </Grid>
 
-<Grid Grid.Row="0" Margin="0,0,0,8" HorizontalAlignment="Stretch">
-<Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="השאלות פעילות חריגות הדורשות טיפול" FontWeight="Bold" VerticalAlignment="Center" />
-                                <Button x:Name="BtnAutoCleanMissingBarcodeLoans" Cursor="Hand" Grid.Column="1" VerticalAlignment="Center" Margin="16,0,0,0" Padding="14,7" Background="#D97706" Foreground="White" FontWeight="Bold" BorderThickness="0" Visibility="Collapsed" Content="&#x26A1; &#x05E0;&#x05E7;&#x05D4; &#x05D0;&#x05D5;&#x05D8;&#x05D5;&#x05DE;&#x05D8;&#x05D9;&#x05EA; &#x05D4;&#x05E9;&#x05D0;&#x05DC;&#x05D5;&#x05EA; &#x05D7;&#x05E8;&#x05D9;&#x05D2;&#x05D5;&#x05EA;" Click="BtnAutoCleanMissingBarcodeLoans_OnClick">
-                                    <Button.Template>
-                                        <ControlTemplate TargetType="Button">
-                                            <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}" BorderBrush="#92400E" BorderThickness="1">
-                                                <Border.Effect>
-                                                    <DropShadowEffect Color="Black" Opacity="0.25" BlurRadius="6" ShadowDepth="2" />
-                                                </Border.Effect>
-                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                            </Border>
-                                            <ControlTemplate.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="Bd" Property="Background" Value="#B45309" />
-                                                    <Setter TargetName="Bd" Property="BorderBrush" Value="#78350F" />
-                                                </Trigger>
-                                                <Trigger Property="IsPressed" Value="True">
-                                                    <Setter TargetName="Bd" Property="Background" Value="#92400E" />
-                                                </Trigger>
-                                                <Trigger Property="IsEnabled" Value="False">
-                                                    <Setter Property="Opacity" Value="0.5" />
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Button.Template>
-                                </Button>
-</Grid>
+                                    <Grid Grid.Row="1">
+                                        <TextBlock x:Name="TxtBrokenLoansOk" Text="לא נמצאו השאלות חריגות. הכול תקין." Foreground="#16A34A" FontWeight="SemiBold" Visibility="Collapsed" VerticalAlignment="Top" />
 
-                                <Grid Grid.Row="1">
-                                    <TextBlock x:Name="TxtBrokenLoansOk" Text="לא נמצאו השאלות חריגות. הכול תקין." Foreground="#16A34A" FontWeight="SemiBold" Visibility="Collapsed" VerticalAlignment="Top" />
+                                        <DataGrid x:Name="GridBrokenLoans"
+                                                  VerticalAlignment="Stretch"
+                                                  MinHeight="90"
+                                                  MaxHeight="220"
+                                                  ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                                  AutoGenerateColumns="False"
+                                                  EnableRowVirtualization="True"
+                                                  EnableColumnVirtualization="True"
+                                                  VirtualizingPanel.IsVirtualizing="True"
+                                                  VirtualizingPanel.VirtualizationMode="Recycling">
+                                            <DataGrid.Columns>
+                                                <DataGridTextColumn Header="ברקוד" Binding="{Binding Barcode}" Width="*" />
+                                                <DataGridTextColumn Header="ת.ז" Binding="{Binding stuID}" Width="*" />
+                                                <DataGridTextColumn Header="חניך" Binding="{Binding StudentName}" Width="2*" />
+                                                <DataGridTextColumn Header="כיתה" Binding="{Binding ClassName}" Width="*" />
+                                                <DataGridTextColumn Header="תאריך השאלה" Binding="{Binding LoanDate}" Width="*" />
+                                                <DataGridTextColumn Header="סיבת חריגה" Binding="{Binding Reason}" Width="2*" />
+                                                <DataGridTemplateColumn Header="פעולה" Width="190">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <Button Content="נקה / סגור השאלה" Padding="8,2" CommandParameter="{Binding}" Click="BtnResolveBrokenLoan_OnClick" />
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+                                    </Grid>
+                                </Grid>
+                            </Border>
 
-                                    <DataGrid x:Name="GridBrokenLoans" VerticalAlignment="Stretch" ScrollViewer.VerticalScrollBarVisibility="Auto" AutoGenerateColumns="False"
-           EnableRowVirtualization="True"
-           EnableColumnVirtualization="True"
-           VirtualizingPanel.IsVirtualizing="True"
-           VirtualizingPanel.VirtualizationMode="Recycling">
+                            <Border x:Name="PnlDuplicateBarcodes"
+                                    Margin="0,0,0,8"
+                                    Padding="10"
+                                    BorderBrush="#E2E8F0"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Background="White"
+                                    Visibility="Collapsed">
+                                <StackPanel>
+                                    <DockPanel Margin="0,0,0,8" LastChildFill="False">
+                                        <TextBlock x:Name="TxtDuplicateBarcodesHeader"
+                                                   DockPanel.Dock="Left"
+                                                   Text="ברקודים כפולים במלאי (0 שורות)"
+                                                   FontWeight="Bold"
+                                                   VerticalAlignment="Center" />
+                                        <Button x:Name="BtnCopyDuplicateBarcodes"
+                                                DockPanel.Dock="Right"
+                                                Content="העתק רשימה ללוח"
+                                                Height="28"
+                                                Padding="10,2"
+                                                Click="BtnCopyDuplicateBarcodes_OnClick" />
+                                    </DockPanel>
+
+                                    <DataGrid x:Name="DgDuplicateBarcodes"
+                                              IsReadOnly="True"
+                                              AutoGenerateColumns="False"
+                                              CanUserAddRows="False"
+                                              HeadersVisibility="Column"
+                                              GridLinesVisibility="Horizontal"
+                                              RowHeaderWidth="0"
+                                              FlowDirection="RightToLeft"
+                                              MinHeight="90"
+                                              MaxHeight="220"
+                                              ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                              EnableRowVirtualization="True"
+                                              EnableColumnVirtualization="True"
+                                              VirtualizingPanel.IsVirtualizing="True"
+                                              VirtualizingPanel.VirtualizationMode="Recycling">
                                         <DataGrid.Columns>
                                             <DataGridTextColumn Header="ברקוד" Binding="{Binding Barcode}" Width="*" />
-                                            <DataGridTextColumn Header="ת.ז" Binding="{Binding stuID}" Width="*" />
-                                            <DataGridTextColumn Header="חניך" Binding="{Binding StudentName}" Width="2*" />
-                                            <DataGridTextColumn Header="כיתה" Binding="{Binding ClassName}" Width="*" />
-                                            <DataGridTextColumn Header="תאריך השאלה" Binding="{Binding LoanDate}" Width="*" />
-                                            <DataGridTextColumn Header="סיבת חריגה" Binding="{Binding Reason}" Width="2*" />
-                                            <DataGridTemplateColumn Header="פעולה" Width="190">
-                                                <DataGridTemplateColumn.CellTemplate>
-                                                    <DataTemplate>
-                                                        <Button Content="נקה / סגור השאלה" Padding="8,2" CommandParameter="{Binding}" Click="BtnResolveBrokenLoan_OnClick" />
-                                                    </DataTemplate>
-                                                </DataGridTemplateColumn.CellTemplate>
-                                            </DataGridTemplateColumn>
+                                            <DataGridTextColumn Header="קוד כותר" Binding="{Binding BookId}" Width="*" />
+                                            <DataGridTextColumn Header="שם הכותר" Binding="{Binding BookName}" Width="2*" />
+                                            <DataGridTextColumn Header="מצב עותק" Binding="{Binding CopyConditionText}" Width="*" />
+                                            <DataGridTextColumn Header="סטטוס" Binding="{Binding LoanStatusText}" Width="*" />
+                                            <DataGridTextColumn Header="משאיל פעיל" Binding="{Binding BorrowerDisplay}" Width="2*" />
                                         </DataGrid.Columns>
                                     </DataGrid>
-                                </Grid>
-                            </Grid>
-                        </Border>
-                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
 
                 </Grid>
             </TabItem>

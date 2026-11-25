@@ -3,6 +3,7 @@ using Microsoft.Win32;
 using MiniExcelLibs;
 using System.Data;
 using System.IO;
+using System.Text;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -15,6 +16,7 @@ public partial class ImportSyncWindow : Window
     private readonly List<DatabaseService.StudentSyncRow> _studentSyncRows = [];
     private readonly List<string> _paymentIds = [];
     private DataTable _brokenLoansTable = new();
+    private DataTable _duplicateBarcodesTable = new();
     private readonly Dictionary<string, string> _classNameToCode = new(StringComparer.OrdinalIgnoreCase);
 
     public ImportSyncWindow(DatabaseService dbService)
@@ -1432,9 +1434,16 @@ public partial class ImportSyncWindow : Window
 
         try
         {
-            var report = await Task.Run(() => _dbService.RunDatabaseHealthCheck());
+            var healthData = await Task.Run(() =>
+            {
+                var report = _dbService.RunDatabaseHealthCheck();
+                var duplicateDetails = _dbService.GetDuplicateBarcodesDetails();
+                return (Report: report, DuplicateDetails: duplicateDetails);
+            });
+
             AnomalousLoansSection.Visibility = Visibility.Visible;
-            LoadDatabaseHealthCheck(report);
+            LoadDatabaseHealthCheck(healthData.Report);
+            LoadDuplicateBarcodesDetails(healthData.DuplicateDetails);
             SetStatus(_brokenLoansTable.Rows.Count == 0
                 ? "בדיקת שלמות המסד הושלמה: מסד הנתונים תקין."
                 : $"בדיקת שלמות המסד הושלמה: נמצאו {_brokenLoansTable.Rows.Count} השאלות חריגות הדורשות טיפול.");
@@ -1452,6 +1461,38 @@ public partial class ImportSyncWindow : Window
         }
     }
 
+    private void BtnCopyDuplicateBarcodes_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (_duplicateBarcodesTable.Rows.Count == 0)
+        {
+            SetStatus("אין ברקודים כפולים להעתקה.");
+            return;
+        }
+
+        var sb = new StringBuilder();
+        sb.AppendLine("ברקוד\tקוד כותר\tשם הכותר\tמצב עותק\tסטטוס\tמשאיל פעיל");
+
+        foreach (DataRow row in _duplicateBarcodesTable.Rows)
+        {
+            var barcode = row.Table.Columns.Contains("Barcode") ? row["Barcode"]?.ToString()?.Trim() ?? string.Empty : string.Empty;
+            var bookId = row.Table.Columns.Contains("BookId") ? row["BookId"]?.ToString()?.Trim() ?? string.Empty : string.Empty;
+            var bookName = row.Table.Columns.Contains("BookName") ? row["BookName"]?.ToString()?.Trim() ?? string.Empty : string.Empty;
+            var copyConditionText = row.Table.Columns.Contains("CopyConditionText") ? row["CopyConditionText"]?.ToString()?.Trim() ?? string.Empty : string.Empty;
+            var loanStatusText = row.Table.Columns.Contains("LoanStatusText") ? row["LoanStatusText"]?.ToString()?.Trim() ?? string.Empty : string.Empty;
+            var borrowerDisplay = row.Table.Columns.Contains("BorrowerDisplay") ? row["BorrowerDisplay"]?.ToString()?.Trim() ?? string.Empty : string.Empty;
+
+            sb.Append(barcode).Append('\t')
+              .Append(bookId).Append('\t')
+              .Append(bookName).Append('\t')
+              .Append(copyConditionText).Append('\t')
+              .Append(loanStatusText).Append('\t')
+              .AppendLine(borrowerDisplay);
+        }
+
+        Clipboard.SetText(sb.ToString());
+        SetStatus($"הועתקו {_duplicateBarcodesTable.Rows.Count:N0} שורות של ברקודים כפולים ללוח.");
+    }
+
     private void LoadDatabaseHealthCheck(DatabaseService.DbHealthReport? existingReport = null)
     {
         var report = existingReport ?? _dbService.RunDatabaseHealthCheck();
@@ -1467,7 +1508,7 @@ public partial class ImportSyncWindow : Window
         var alertTexts = new List<string>(report.Warnings);
         if (scrappedCount > 0)
         {
-            alertTexts.Add($"נמצאו {scrappedCount} השאלות פעילות של עותקים גרוטים (שאריות סלקוד).");
+            alertTexts.Add($"נמצאו {scrappedCount} ספרים גרוטים שעדיין רשומים בטעות כמושאלים.");
         }
 
         if (alertTexts.Count == 0 && brokenForAlerts.Rows.Count > 0)
@@ -1487,7 +1528,9 @@ public partial class ImportSyncWindow : Window
             foreach (var warning in alertTexts)
             {
                 var color = warning.Contains("כפולים", StringComparison.OrdinalIgnoreCase) ||
-                            warning.Contains("אינו קיים", StringComparison.OrdinalIgnoreCase)
+                            warning.Contains("לא קיים", StringComparison.OrdinalIgnoreCase) ||
+                            warning.Contains("לא נמצא", StringComparison.OrdinalIgnoreCase) ||
+                            warning.Contains("אינם משויכים", StringComparison.OrdinalIgnoreCase)
                     ? "#DC2626"
                     : "#C2410C";
 
@@ -1500,6 +1543,26 @@ public partial class ImportSyncWindow : Window
         LstHealthWarnings.ItemsSource = warningItems;
 
         LoadBrokenActiveLoans();
+    }
+
+    private void LoadDuplicateBarcodesDetails(DataTable details)
+    {
+        _duplicateBarcodesTable = details ?? new DataTable();
+
+        if (FindName("DgDuplicateBarcodes") is System.Windows.Controls.DataGrid duplicateGrid)
+        {
+            duplicateGrid.ItemsSource = _duplicateBarcodesTable.DefaultView;
+        }
+
+        if (FindName("TxtDuplicateBarcodesHeader") is System.Windows.Controls.TextBlock duplicateHeader)
+        {
+            duplicateHeader.Text = $"ברקודים כפולים במלאי ({_duplicateBarcodesTable.Rows.Count:N0} שורות)";
+        }
+
+        if (FindName("PnlDuplicateBarcodes") is FrameworkElement duplicatePanel)
+        {
+            duplicatePanel.Visibility = _duplicateBarcodesTable.Rows.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
     }
 
     private void LoadBrokenActiveLoans()
@@ -1580,7 +1643,7 @@ public partial class ImportSyncWindow : Window
     private async void BtnAutoCleanMissingBarcodeLoans_OnClick(object sender, RoutedEventArgs e)
     {
         var confirm = ShowRestoreMessage(
-        "לנקות אוטומטית את כל ההשאלות החריגות (ברקוד שאינו קיים במלאי ועותקים גרוטים רשומים כמושאלים)? השאלות של חניך שאינו קיים יישארו לטיפול ידני.",
+        "לנקות אוטומטית את כל ההשאלות החריגות (ברקוד שאינו קיים במלאי ועותקים גרוטים רשומים כמושאלים)? השאלות של חניך שלא נמצא במצבת יישארו לטיפול ידני.",
             "ניקוי אוטומטי",
             MessageBoxButton.YesNo,
             MessageBoxImage.Warning,
