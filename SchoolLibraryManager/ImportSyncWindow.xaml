@@ -483,6 +483,7 @@
                                                   MaxHeight="220"
                                                   ScrollViewer.VerticalScrollBarVisibility="Auto"
                                                   AutoGenerateColumns="False"
+                                                  CanUserAddRows="False"
                                                   EnableRowVirtualization="True"
                                                   EnableColumnVirtualization="True"
                                                   VirtualizingPanel.IsVirtualizing="True"

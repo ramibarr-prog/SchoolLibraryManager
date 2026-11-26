@@ -5091,9 +5091,10 @@ public class DatabaseService
             {
                 nextSuffix++;
                 var barcode = $"{cleanBkId}{nextSuffix.ToString($"D{suffixDigits}", CultureInfo.InvariantCulture)}";
-                if (BarcodeExists(connection, tx, barcode))
+                while (BarcodeExists(connection, tx, barcode))
                 {
-                    continue;
+                    nextSuffix++;
+                    barcode = $"{cleanBkId}{nextSuffix.ToString($"D{suffixDigits}", CultureInfo.InvariantCulture)}";
                 }
 
                 using var cmd = new OleDbCommand("INSERT INTO [BookCopy] (bkID, Barcode, CopyReturnStatus, CopyCondition, EnterDate) VALUES (?, ?, '0', '1', ?)", connection, tx);
